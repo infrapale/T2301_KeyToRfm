@@ -4,8 +4,6 @@
 #define UART_MAX_BLOCK_LEN  8
 #include "Arduino.h"
 
-#define SerialKbd  Serial1
-#define SerialRfm  Serial2
 
 #define  KBD_RX_BUF_LEN   80
 #define  KBD_RX_RING_BUFF_LEN   16

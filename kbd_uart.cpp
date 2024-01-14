@@ -109,7 +109,7 @@ void kbd_uart_parse_rx(void)
 
         if ((kbd_uart.data.module < '1') || (kbd_uart.data.module > '2')) do_continue = false; 
         if ((kbd_uart.data.key < '1') || (kbd_uart.data.key > '8')) do_continue = false;
-        if ((kbd_uart.data.value != '1') && (kbd_uart.data.value != '2')) do_continue = false;
+        if ((kbd_uart.data.value != '0') && (kbd_uart.data.value != '1')) do_continue = false;
     }
     if (do_continue)
     {
