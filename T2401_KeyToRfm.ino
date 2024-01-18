@@ -175,8 +175,8 @@ void test_serial(void)
 {
  while(false) 
   {
-    Serial1.write("A5A5A5");
-    Serial2.write("A5A5A5");
+    // Serial1.write("A5A5A5");
+    // Serial2.write("A5A5A5");
     delay(2000);
   
     // if (Serial1.available()) {
