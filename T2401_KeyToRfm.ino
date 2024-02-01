@@ -47,15 +47,24 @@ https://arduino-pico.readthedocs.io/en/latest/serial.html
 #include "Arduino.h"
 #include "main.h"
 #include "kbd_uart.h"
-#include <TaHa.h> 
+//#include <TaHa.h> 
+#include "task.h"
 #include "func.h"
 #include "relay.h"
+#include "clock24.h"
   
-TaHa TaHa_send_key_commands;
-TaHa TaHa_read_key_commands;
+
+//extern task_st *task[TASK_NBR_OF];
+main_ctrl_st main_ctrl = {0x00};
+
+void run_read_key_commands(void);
+void run_send_key_commands(void);
 
 
+task_st read_key_task = {"Read Key       ", 100,0, 0, 255, run_read_key_commands };
+task_st send_key_task = {"Send Key       ", 100,0, 0, 255, run_send_key_commands };
 
+extern task_st task[TASK_NBR_OF];
 
 void setup() {
   // put your setup code here, to run once:
@@ -73,16 +82,16 @@ void setup() {
   Serial.println(APP_NAME);
   Serial.println(__DATE__); Serial.println(__TIME__);
   
+  task_initialize(TASK_NBR_OF);
+  task_set_task(TASK_READ_KEY, &read_key_task); 
+  task_set_task(TASK_SEND_RFM, &send_key_task); 
+  main_ctrl.status = STATUS_AWAY;
   kbd_uart_initialize();
-  TaHa_send_key_commands.set_interval(100, RUN_RECURRING, run_send_key_commands); 
-  TaHa_read_key_commands.set_interval(100, RUN_RECURRING, run_read_key_commands); 
-
+  clock24_initialize();
 }
 
 void loop() {
-  TaHa_send_key_commands.run();
-  TaHa_read_key_commands.run();
-    
+  task_run();    
 }
 
 void run_read_key_commands(void)
@@ -126,6 +135,9 @@ void run_send_key_commands(void)
               case FUNC_RELAY_GROUP:
                 state = 20;
                 break;
+              case FUNC_OPTION:
+                state = 30;
+                break;
               default:
                 Serial.println("Incorect function type"); 
                 break;
@@ -167,7 +179,72 @@ void run_send_key_commands(void)
     case 23:
       if (millis() > next_send_ms) state = 21;
       break;  
+    case 30:
+      if (kbd_ring_get_key(&key_data))
+      {
+          Serial.print("Option: ");
+          if(key_data.module == '1')
+          {
+             switch (key_data.key)
+             {
+                case '1':
+                  state = 31;  // Set time
+                  break;
+                case '2':
+                  state = 40;
+                  break;  
+                default:
+                  break;
+             }
+          }
+      }
+      break;  
+    case 31:
+      if (kbd_ring_get_key(&key_data))
+      {
+          if(key_data.module == '1')
+          {
+            switch (key_data.key)
+            {
+              case '1':
+                if(++main_ctrl.time.hour > 23) main_ctrl.time.hour = 0 ;
+                break;
+              case '2':
+                if(main_ctrl.time.hour > 0) main_ctrl.time.hour-- ;
+                break;
+              case '3':
+                main_ctrl.time.minute += 15;
+                if(main_ctrl.time.minute > 45 ) main_ctrl.time.minute = 0 ;
+                break;
+              case '4':
+                state = 0;
+                break;  
+              default:
+                break;
+            }
+            clock_show(main_ctrl.time.hour, main_ctrl.time.minute);
+          }
 
+      }
+      break;  
+    case 40:
+      if (kbd_ring_get_key(&key_data))
+      {
+        if(key_data.module == '1')
+        {
+          switch (key_data.key)
+          {
+            case '5':
+              main_ctrl.status = STATUS_AT_HOME;
+              break;
+            case '6':
+              main_ctrl.status = STATUS_AWAY;
+              break;
+          }
+        }
+        state = 0;
+      }  
+      break;
   }
 }
 

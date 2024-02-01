@@ -12,6 +12,7 @@ typedef enum
     FUNC_UNDEFINED = 0,
     FUNC_RELAY,
     FUNC_RELAY_GROUP,
+    FUNC_OPTION,
     FUNC_NBR_OF
 } func_et;
 
