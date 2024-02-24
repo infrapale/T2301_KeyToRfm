@@ -60,9 +60,10 @@ main_ctrl_st main_ctrl = {0x00};
 void run_read_key_commands(void);
 void run_send_key_commands(void);
 
-
-task_st read_key_task = {"Read Key       ", 100,0, 0, 255, run_read_key_commands };
-task_st send_key_task = {"Send Key       ", 100,0, 0, 255, run_send_key_commands };
+//                              name             ms next state prevcb
+task_st read_key_task =       {"Read Key       ", 100,0, 0, 255, run_read_key_commands };
+task_st send_key_task =       {"Send Key       ", 100,0, 0, 255, run_send_key_commands };
+task_st update_clock24_task = {"Clock24 Update ", 100,0, 0, 255, clock24_show_task};
 
 extern task_st task[TASK_NBR_OF];
 
@@ -85,6 +86,7 @@ void setup() {
   task_initialize(TASK_NBR_OF);
   task_set_task(TASK_READ_KEY, &read_key_task); 
   task_set_task(TASK_SEND_RFM, &send_key_task); 
+  task_set_task(TASK_UPDATE_CLOCK24, &update_clock24_task);
   main_ctrl.status = STATUS_AWAY;
   kbd_uart_initialize();
   clock24_initialize();
@@ -137,6 +139,7 @@ void run_send_key_commands(void)
                 break;
               case FUNC_OPTION:
                 state = 30;
+                clock24_set_state(CLOCK_STATE_OPTION);
                 break;
               default:
                 Serial.println("Incorect function type"); 
@@ -218,11 +221,12 @@ void run_send_key_commands(void)
                 break;
               case '4':
                 state = 0;
+                clock24_clear_state(CLOCK_STATE_OPTION);
                 break;  
               default:
                 break;
             }
-            clock_show(main_ctrl.time.hour, main_ctrl.time.minute);
+            clock24_set_time(main_ctrl.time.hour, main_ctrl.time.minute);
           }
 
       }
@@ -236,9 +240,11 @@ void run_send_key_commands(void)
           {
             case '5':
               main_ctrl.status = STATUS_AT_HOME;
+               clock24_set_state(CLOCK_STATE_AT_HOME);
               break;
             case '6':
               main_ctrl.status = STATUS_AWAY;
+               clock24_clear_state(CLOCK_STATE_AT_HOME);
               break;
           }
         }

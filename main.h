@@ -12,6 +12,7 @@ typedef enum
 {
     TASK_READ_KEY = 0,
     TASK_SEND_RFM,
+    TASK_UPDATE_CLOCK24,
     TASK_NBR_OF
 } tasks_et;
 
