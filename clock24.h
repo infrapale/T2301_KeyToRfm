@@ -16,6 +16,8 @@ void clock24_show_task(void);
 
 void clock24_set_time(uint8_t hour, uint8_t minute);
 
+uint16_t clock24_get_state(void);
+
 void clock24_set_state(clock_state_et c_state );
 
 void clock24_clear_state(clock_state_et c_state );

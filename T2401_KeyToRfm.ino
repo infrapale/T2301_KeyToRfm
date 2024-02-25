@@ -45,6 +45,8 @@ https://arduino-pico.readthedocs.io/en/latest/serial.html
 #define PIN_SERIAL_2_RX (5u)
 
 #include "Arduino.h"
+#include <Wire.h>
+#include <LiquidCrystal_PCF8574.h>
 #include "main.h"
 #include "kbd_uart.h"
 //#include <TaHa.h> 
@@ -52,6 +54,7 @@ https://arduino-pico.readthedocs.io/en/latest/serial.html
 #include "func.h"
 #include "relay.h"
 #include "clock24.h"
+#include "menu4x2.h"
   
 
 //extern task_st *task[TASK_NBR_OF];
@@ -59,17 +62,22 @@ main_ctrl_st main_ctrl = {0x00};
 
 void run_read_key_commands(void);
 void run_send_key_commands(void);
+void debug_print_task(void);
 
 //                              name             ms next state prevcb
 task_st read_key_task =       {"Read Key       ", 100,0, 0, 255, run_read_key_commands };
 task_st send_key_task =       {"Send Key       ", 100,0, 0, 255, run_send_key_commands };
 task_st update_clock24_task = {"Clock24 Update ", 100,0, 0, 255, clock24_show_task};
+task_st debug_print_handle =  {"Debug Print    ", 5000,0, 0, 255, debug_print_task};
+
+int show = -1;
+LiquidCrystal_PCF8574 lcd(0x27);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 
 extern task_st task[TASK_NBR_OF];
 
 void setup() {
   // put your setup code here, to run once:
-  
+  int error;
   Serial1.setTX(PIN_SERIAL1_TX);
   Serial1.setRX(PIN_SERIAL1_RX);
   Serial2.setTX(PIN_SERIAL_2_TX);
@@ -83,13 +91,35 @@ void setup() {
   Serial.println(APP_NAME);
   Serial.println(__DATE__); Serial.println(__TIME__);
   
+  Wire.setSCL(9);
+  Wire.setSDA(8);
+  Wire.begin();
+  Wire.beginTransmission(0x27);
+  error = Wire.endTransmission();
+  Serial.print("Error: ");
+  Serial.print(error);
+
+  if (error == 0) {
+    Serial.println(": LCD found.");
+    show = 0;
+    lcd.begin(20, 4);  // initialize the lcd
+
+
+  } else {
+    Serial.println(": LCD not found.");
+  }  // if
+
+
   task_initialize(TASK_NBR_OF);
   task_set_task(TASK_READ_KEY, &read_key_task); 
   task_set_task(TASK_SEND_RFM, &send_key_task); 
   task_set_task(TASK_UPDATE_CLOCK24, &update_clock24_task);
+  task_set_task(TASK_DEBUG, &debug_print_handle);
   main_ctrl.status = STATUS_AWAY;
   kbd_uart_initialize();
   clock24_initialize();
+  menu4x2_show(MENU_MAIN);
+
 }
 
 void loop() {
@@ -240,14 +270,16 @@ void run_send_key_commands(void)
           {
             case '5':
               main_ctrl.status = STATUS_AT_HOME;
-               clock24_set_state(CLOCK_STATE_AT_HOME);
+              clock24_set_state(CLOCK_STATE_AT_HOME);
+               
               break;
             case '6':
               main_ctrl.status = STATUS_AWAY;
-               clock24_clear_state(CLOCK_STATE_AT_HOME);
+              clock24_clear_state(CLOCK_STATE_AT_HOME);
               break;
           }
         }
+        clock24_clear_state(CLOCK_STATE_OPTION);
         state = 0;
       }  
       break;
@@ -270,5 +302,17 @@ void test_serial(void)
     //   Serial1.write(Serial2.read() & 0xAA);   
     // }
   }  
+}
+
+void debug_print_task(void)
+{
+  uint16_t clock_state = clock24_get_state();
+  if (clock_state & CLOCK_STATE_AT_HOME) Serial.print("At home -");
+  else  Serial.print("Away -");
+  if (clock_state & CLOCK_STATE_SENDING) Serial.print("Sending -");
+  if (clock_state & CLOCK_STATE_OPTION) Serial.print("Option -");
+  if (clock_state & CLOCK_STATE_CNTDWN) Serial.print("Countdown -");
+  Serial.println("");
+
 }
  

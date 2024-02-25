@@ -9,6 +9,7 @@
 #define PIN               22
 #define NBR_OF_PIX        24
 #define NBR_OF_HOURS      24
+#define NBR_HALF_HOURS    12
 #define MINUTES_PER_HOUR  60
 #define FULL_DAY_MINUTES  (NBR_OF_HOURS * MINUTES_PER_HOUR)
 #define HALF_DAY_MINUTES  (12*MINUTES_PER_HOUR)
@@ -26,6 +27,8 @@ typedef struct
   uint16_t state;
   uint8_t  rot1;
   uint8_t  rot2;
+  bool      up1;
+  bool      up2;
   uint16_t hour_minutes[NBR_OF_HOURS*2];
 } clock24_st;
 
@@ -57,6 +60,10 @@ void clock24_initialize(void)
   clock24.state = 0x0000UL;
   clock24.time.hour   = 0;
   clock24.time.minute = 0;
+  clock24.rot1 = 0;
+  clock24.rot2 = 23;
+  clock24.up1 = true;
+  clock24.up2 = false;
   strip.begin();
   strip.setBrightness(50);
   strip.show(); // Initialize all pixels to 'off'
@@ -124,26 +131,52 @@ void clock24_show_task(void)
             color_u32 = strip.Color( 0, intens, 0);
             break;
           case STATUS_AWAY:
-            color_u32 = strip.Color( intens, 0, 0);
+            color_u32 = strip.Color( 0, intens, 0);
             break;
         }
         if (clock24.state & CLOCK_STATE_OPTION)
         {
-           if (clock24.rot1 == hx) color_u32 = strip.Color( 128, 128, 0);
-           if (clock24.rot2 == hx) color_u32 = strip.Color( 128, 128, 0);
-        }
-        if ((clock24.state & CLOCK_STATE_AT_HOME) == 0)
+           if (clock24.rot1 > clock24.rot2)
+           {
+              if (clock24.rot1 == hx) color_u32 = strip.Color( 128, 128, 0);
+           }
+           else
+           {
+              if (clock24.rot1 == hx) color_u32 = strip.Color( 0, 128, 0);
+           }
+
+         }
+        else if ((clock24.state & CLOCK_STATE_AT_HOME) == 0)
         {
-           if (clock24.rot1 < hx) color_u32 = strip.Color( 128, 0, 0);
-           if (clock24.rot2 > hx) color_u32 = strip.Color( 0, 0, 128);
+           clock24.rot2 = 12 + clock24.rot1;
+           if (clock24.rot2 >= 24) clock24.rot2 -= 24;
+           if (clock24.rot1 > clock24.rot2)
+           {
+              if ((clock24.rot1 > hx) && (clock24.rot2 < hx))  color_u32 = strip.Color( 128, 0, 0);
+           }
+           else
+           {
+              if ((clock24.rot1 > hx) || (clock24.rot2 < hx))  color_u32 = strip.Color( 128, 0, 0);
+           }
+           //if (clock24.rot2 >hx) color_u32 = strip.Color( 0, 0, 0);
         }
-        
+
+        else if ((clock24.state & CLOCK_STATE_AT_HOME) != 0)
+        {
+           if (clock24.rot1 == hx) color_u32 = strip.Color( 0, 128, 0);
+           //if (clock24.rot2 >hx) color_u32 = strip.Color( 0, 0, 0);
+        }
+
 
         strip.setPixelColor(hx, color_u32);
     }
     strip.show();
 }
 
+uint16_t clock24_get_state(void)
+{
+  return clock24.state;
+}
 void clock24_set_state(clock_state_et c_state )
 {
     switch(c_state)
