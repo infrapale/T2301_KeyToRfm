@@ -7,6 +7,9 @@
 
 #define SerialKbd Serial1
 #define SerialRfm Serial2
+#define PIN_NEO_PIXEL 22
+#define PIN_PIR       15
+#define PIN_LDR       26
 
 typedef enum {
   TASK_READ_KEY = 0,

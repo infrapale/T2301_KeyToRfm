@@ -47,13 +47,13 @@ https://arduino-pico.readthedocs.io/en/latest/serial.html
 #include "Arduino.h"
 #include <Wire.h>
 #include <LiquidCrystal_PCF8574.h>
+#include <Adafruit_NeoPixel.h>
 #include "main.h"
 #include "kbd_uart.h"
-//#include <TaHa.h> 
 #include "task.h"
 #include "func.h"
 #include "relay.h"
-#include "clock24.h"
+// #include "clock24.h"
 #include "menu4x2.h"
   
 
@@ -66,9 +66,9 @@ void debug_print_task(void);
 
 //                              name             ms next state prevcb
 task_st read_key_task =       {"Read Key       ", 100,0, 0, 255, run_read_key_commands };
-task_st send_key_task =       {"Send Key       ", 100,0, 0, 255, run_send_key_commands };
-task_st update_clock24_task = {"Clock24 Update ", 100,0, 0, 255, clock24_show_task};
-task_st debug_print_handle =  {"Debug Print    ", 5000,0, 0, 255, debug_print_task};
+task_st send_key_task =       {"Send Key       ", 10, 0, 0, 255, run_send_key_commands };
+//task_st update_clock24_task = {"Clock24 Update ", 100,0, 0, 255, clock24_show_task};
+task_st debug_print_handle =  {"Debug Print    ", 2000,0, 0, 255, debug_print_task};
 
 int show = -1;
 LiquidCrystal_PCF8574 lcd(0x27);  // set the LCD address to 0x27 for a 16 chars and 2 line display
@@ -82,6 +82,8 @@ void setup() {
   Serial1.setRX(PIN_SERIAL1_RX);
   Serial2.setTX(PIN_SERIAL_2_TX);
   Serial2.setRX(PIN_SERIAL_2_RX);
+
+
 
   Serial.begin(9600);
   Serial1.begin(9600);
@@ -109,21 +111,27 @@ void setup() {
     Serial.println(": LCD not found.");
   }  // if
 
+  analogReadResolution(12);
+  pinMode(PIN_PIR, INPUT);
+  
+
 
   task_initialize(TASK_NBR_OF);
   task_set_task(TASK_READ_KEY, &read_key_task); 
   task_set_task(TASK_SEND_RFM, &send_key_task); 
-  task_set_task(TASK_UPDATE_CLOCK24, &update_clock24_task);
+  //task_set_task(TASK_UPDATE_CLOCK24, &update_clock24_task);
   task_set_task(TASK_DEBUG, &debug_print_handle);
   main_ctrl.status = STATUS_AWAY;
   kbd_uart_initialize();
-  clock24_initialize();
-  menu4x2_show(MENU_MAIN);
-
+  //clock24_initialize();
+  menu4x2_initialize();
+  
 }
 
 void loop() {
   task_run();    
+ 
+
 }
 
 void run_read_key_commands(void)
@@ -159,21 +167,30 @@ void run_send_key_commands(void)
           if (func_get_key(&key_data, &func_data))
           {
             // Serial.printf("type: %d index: %d\n", func_data.type, func_data.indx);
-            switch (func_data.type)
+
+            if ((key_data.module == '1') && menu4x2_key_do_menu(key_data.key))
             {
-              case FUNC_RELAY:
-                state = 10;
-                break;
-              case FUNC_RELAY_GROUP:
-                state = 20;
-                break;
-              case FUNC_OPTION:
-                state = 30;
-                clock24_set_state(CLOCK_STATE_OPTION);
-                break;
-              default:
-                Serial.println("Incorect function type"); 
-                break;
+              Serial.print("Menu command: "); Serial.println(key_data.key);
+              menu4x2_key_pressed(key_data.key);
+            }
+            else
+            {
+              switch (func_data.type)
+              {
+                case FUNC_RELAY:
+                  state = 10;
+                  break;
+                case FUNC_RELAY_GROUP:
+                  state = 20;
+                  break;
+                case FUNC_OPTION:
+                  //state = 30;
+                  break;
+                default:
+                  Serial.println("Incorect function type"); 
+                  break;
+              }
+
             }
           }
           else Serial.println("func_get_key failed");
@@ -218,47 +235,8 @@ void run_send_key_commands(void)
           Serial.print("Option: ");
           if(key_data.module == '1')
           {
-             switch (key_data.key)
-             {
-                case '1':
-                  state = 31;  // Set time
-                  break;
-                case '2':
-                  state = 40;
-                  break;  
-                default:
-                  break;
-             }
+            menu4x2_key_pressed(key_data.key);
           }
-      }
-      break;  
-    case 31:
-      if (kbd_ring_get_key(&key_data))
-      {
-          if(key_data.module == '1')
-          {
-            switch (key_data.key)
-            {
-              case '1':
-                if(++main_ctrl.time.hour > 23) main_ctrl.time.hour = 0 ;
-                break;
-              case '2':
-                if(main_ctrl.time.hour > 0) main_ctrl.time.hour-- ;
-                break;
-              case '3':
-                main_ctrl.time.minute += 15;
-                if(main_ctrl.time.minute > 45 ) main_ctrl.time.minute = 0 ;
-                break;
-              case '4':
-                state = 0;
-                clock24_clear_state(CLOCK_STATE_OPTION);
-                break;  
-              default:
-                break;
-            }
-            clock24_set_time(main_ctrl.time.hour, main_ctrl.time.minute);
-          }
-
       }
       break;  
     case 40:
@@ -270,16 +248,16 @@ void run_send_key_commands(void)
           {
             case '5':
               main_ctrl.status = STATUS_AT_HOME;
-              clock24_set_state(CLOCK_STATE_AT_HOME);
+              //clock24_set_state(CLOCK_STATE_AT_HOME);
                
               break;
             case '6':
               main_ctrl.status = STATUS_AWAY;
-              clock24_clear_state(CLOCK_STATE_AT_HOME);
+              //clock24_clear_state(CLOCK_STATE_AT_HOME);
               break;
           }
         }
-        clock24_clear_state(CLOCK_STATE_OPTION);
+        // clock24_clear_state(CLOCK_STATE_OPTION);
         state = 0;
       }  
       break;
@@ -306,13 +284,17 @@ void test_serial(void)
 
 void debug_print_task(void)
 {
-  uint16_t clock_state = clock24_get_state();
-  if (clock_state & CLOCK_STATE_AT_HOME) Serial.print("At home -");
-  else  Serial.print("Away -");
-  if (clock_state & CLOCK_STATE_SENDING) Serial.print("Sending -");
-  if (clock_state & CLOCK_STATE_OPTION) Serial.print("Option -");
-  if (clock_state & CLOCK_STATE_CNTDWN) Serial.print("Countdown -");
-  Serial.println("");
+  uint16_t a_ldr = analogRead(PIN_LDR);
+  Serial.println(a_ldr);
+  Serial.print("PIR="); Serial.println(digitalRead(PIN_PIR));
+  
+  // uint16_t clock_state = clock24_get_state());
+  // if (clock_state & CLOCK_STATE_AT_HOME) Serial.print("At home -");
+  // else  Serial.print("Away -");
+  // if (clock_state & CLOCK_STATE_SENDING) Serial.print("Sending -");
+  // if (clock_state & CLOCK_STATE_OPTION) Serial.print("Option -");
+  // if (clock_state & CLOCK_STATE_CNTDWN) Serial.print("Countdown -");
+  // Serial.println("");
 
 }
  

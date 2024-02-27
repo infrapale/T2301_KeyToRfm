@@ -10,6 +10,8 @@ typedef enum
 {
   MENU_MAIN = 0,
   MENU_OPTION,
+  MENU_SET_TIME,
+  MENU_HOME,
   MENU_NBR_OF  
 } menu_index_et;
 
@@ -18,13 +20,19 @@ typedef void (*menu_cb)(void);
 typedef struct 
 {
   char      label[LABEL_LEN +1];
-  uint8_t   next_menu_indx;
+  uint8_t   active;
+  uint8_t   next_level;
   menu_cb   cb;
 }  menu_item_st;
 
-
 typedef menu_item_st menu4x2_t[MENU_TOTAL];    //[MENU_NBR_OF];
 
+void menu4x2_initialize(void);
+
 void menu4x2_show(uint8_t mindx);
+
+bool menu4x2_key_do_menu(char key);
+
+void menu4x2_key_pressed(char key);
 
 #endif
