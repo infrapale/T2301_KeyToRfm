@@ -1,9 +1,15 @@
 #include <stdint.h>
 #include "main.h"
+#include "func.h"
+#include "menu4x2.h"
+#include "relay.h"
 #include "kbd_uart.h"
+#include "signal.h"
 //#include "json.h"
 
 
+
+extern main_ctrl_st main_ctrl;
 
 kbd_uart_st  kbd_uart;
 kbd_data_st kbd_rx_ring[KBD_RX_RING_BUFF_LEN];
@@ -131,77 +137,144 @@ void kbd_print_mesage(void)
     //Serial.printf("module: %c key: %c value: %c\n", kbd_uart.data.module ,kbd_uart.data.key, kbd_uart.data.value);
 }
 
-// void uart_build_node_from_rx_str(void)
-// {
-//     uint8_t indx1;
-//     uint8_t indx2;
-//     indx1 = 0;  //uart.rx.str.indexOf(':')
-//     indx2 = uart.rx.str.indexOf(';');
-//     uart.node.zone = uart.rx.str.substring(indx1,indx2);
-//     indx1 = indx2+1;
-//     indx2 = uart.rx.str.indexOf(';',indx1+1);
-//     uart.node.name = uart.rx.str.substring(indx1,indx2);
-//     indx1 = indx2+1;
-//     indx2 = uart.rx.str.indexOf(';',indx1+1);
-//     uart.node.value = uart.rx.str.substring(indx1,indx2);
-//     indx1 = indx2+1;
-//     indx2 = uart.rx.str.indexOf(';',indx1+1);
-//     uart.node.remark = uart.rx.str.substring(indx1,indx2);
-//     indx1 = indx2+1;
-//     indx2 = uart.rx.str.indexOf(';',indx1+1);
-    
-// }
+void run_read_key_commands(void)
+{
+  if (kbd_uart_read())
+  {
+      kbd_uart_parse_rx();
+  }
+}
 
 
+void run_send_key_commands(void)
+{
+  static uint8_t state = 0;
+  static uint8_t prev_state = 99;
+  static uint32_t next_send_ms = 0;
+  static uint8_t  relay_indx = 0;
+  static kbd_data_st key_data;
+  static key_function_st func_data;
 
+  if (state != prev_state) 
+  {
+    Serial.printf("State %d -> %d\n", prev_state, state);
+    prev_state = state;
+  }
+  switch(state)
+  {
+    case 0:   // wait for key to be pressed
+      if (kbd_ring_get_key(&key_data))
+      {
+          Serial.print("Got: ");
+          kbd_print_module_key_value(&key_data);
 
+          if (func_get_key(&key_data, &func_data))
+          {
+            // Serial.printf("type: %d index: %d\n", func_data.type, func_data.indx);
 
-// void uart_build_node_tx_str(void)
-// {
-//     rfm_receive_msg_st *receive_p = rfm_receive_get_data_ptr();
-//     // <#X1N:RMH1;RKOK1;T;->\n   -> {"Z":"MH1","S":"RKOK1","V":"T","R":"-"}
-//     uart.rx.str = (char*) receive_p->radio_msg;  
-//     uart.tx.str = "<#X1a:";
-//     json_pick_data_from_rx(&uart);
-//     #ifdef DEBUG_PRINT
-//     Serial.print("radio_msg: ");
-//     Serial.println(uart.rx.str);  
-//     Serial.println(uart.node.zone);
-//     Serial.println(uart.node.name);
-//     Serial.println(uart.node.value);
-//     Serial.println(uart.node.remark);
-//     #endif
-//     uart.tx.str += uart.node.zone;
-//     uart.tx.str += ';';
-//     uart.tx.str += uart.node.name;
-//     uart.tx.str += ';';
-//     uart.tx.str += uart.node.value;
-//     uart.tx.str += ';';
-//     uart.tx.str += uart.node.remark;
-//     uart.tx.str += '>';
-// }
+            if ((key_data.module == '1') && menu4x2_key_do_menu(key_data.key))
+            {
+              Serial.print("Menu command: "); Serial.println(key_data.key);
+              menu4x2_key_pressed(key_data.key);
+            }
+            else
+            {
+              switch (func_data.type)
+              {
+                case FUNC_RELAY:
+                  state = 10;
+                  break;
+                case FUNC_RELAY_GROUP:
+                  state = 20;
+                  break;
+                case FUNC_OPTION:
+                  //state = 30;
+                  break;
+                default:
+                  Serial.println("Incorect function type"); 
+                  break;
+              }
 
-// void uart_build_raw_tx_str(void)
-// {
-//     rfm_receive_msg_st *receive_p = rfm_receive_get_data_ptr();
-//     uart.tx.str = "<#X1r:";
-//     uart.tx.str += (char*) receive_p->radio_msg;
-//     uart.tx.str += '>';
-// }
-
-// void uart_rx_send_rfm_from_raw(void)
-// {
-//     String payload = uart.rx.str.substring(6,uart.rx.len - 1);
-//     payload.toCharArray(uart.rx.radio_msg, MAX_MESSAGE_LEN);
-//     rfm_send_radiate_msg(uart.rx.radio_msg);
-// }
-
-// void uart_rx_send_rfm_from_node(void)
-// {
-//     uart.rx.str = uart.rx.str.substring(6,uart.rx.len - 1);
-//     uart_build_node_from_rx_str();
-//     rfm_send_msg_st *send_p = rfm_send_get_data_ptr();
-//     json_convert_uart_node_to_json(send_p->radio_msg, &uart);
-//     rfm_send_radiate_msg(send_p->radio_msg);
-// }
+            }
+          }
+          else Serial.println("func_get_key failed");
+      }
+      break;
+    case 10:  // single relay function
+      signal_set_state(SIGNAL_SENDING);
+      relay_send_one((va_relays_et)func_data.indx, key_data.value );
+      next_send_ms = millis() + RFM_SEND_INTERVAL;
+      state++;
+      break;
+    case 11:
+      if (millis() > next_send_ms)
+      {
+        state = 0;
+        signal_return_state();
+      } 
+      break;  
+    case 20:  // relay group
+      signal_set_state(SIGNAL_SENDING);
+      relay_indx = 0;
+      state++;
+      break;  
+    case 21:
+      while (relay_indx < VA_RELAY_NBR_OF)
+      {
+        if (relay_get_is_relay_in_group((va_relays_et)relay_indx, func_data.indx )) 
+        {
+          state++;  // send realy message
+          break;
+        }  
+        else relay_indx++;  // check next relay
+      }
+      if (relay_indx >= VA_RELAY_NBR_OF) 
+      {
+        state = 0;
+        signal_return_state();
+      }
+      break;  
+    case 22: 
+      relay_send_one((va_relays_et)relay_indx, key_data.value );
+      next_send_ms = millis() + RFM_SEND_INTERVAL;
+      relay_indx++;
+      state++;
+      break;
+    case 23:
+      if (millis() > next_send_ms) state = 21;
+      break;  
+    case 30:
+      if (kbd_ring_get_key(&key_data))
+      {
+          Serial.print("Option: ");
+          if(key_data.module == '1')
+          {
+            menu4x2_key_pressed(key_data.key);
+          }
+      }
+      break;  
+    case 40:
+      if (kbd_ring_get_key(&key_data))
+      {
+        if(key_data.module == '1')
+        {
+          switch (key_data.key)
+          {
+            case '5':
+              // main_ctrl.status = STATUS_AT_HOME;
+              //clock24_set_state(CLOCK_STATE_AT_HOME);
+               
+              break;
+            case '6':
+              //main_ctrl.status = STATUS_AWAY;
+              //clock24_clear_state(CLOCK_STATE_AT_HOME);
+              break;
+          }
+        }
+        // clock24_clear_state(CLOCK_STATE_OPTION);
+        state = 0;
+      }  
+      break;
+  }
+}
 

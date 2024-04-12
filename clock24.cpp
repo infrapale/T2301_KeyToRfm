@@ -125,15 +125,16 @@ void clock24_show_task(void)
         if ( d < 30) intens = 255;
         else if ( d < 60) intens = 40;
         else if ( d < 120) intens = 10;
-        switch (main_ctrl.status)
-        {
-          case STATUS_AT_HOME:
-            color_u32 = strip.Color( 0, intens, 0);
-            break;
-          case STATUS_AWAY:
-            color_u32 = strip.Color( 0, intens, 0);
-            break;
-        }
+
+        // switch (main_ctrl.status)
+        // {
+        //   case STATUS_AT_HOME:
+        //     color_u32 = strip.Color( 0, intens, 0);
+        //     break;
+        //   case STATUS_AWAY:
+        //     color_u32 = strip.Color( 0, intens, 0);
+        //     break;
+        // }
         if (clock24.state & CLOCK_STATE_OPTION)
         {
            if (clock24.rot1 > clock24.rot2)

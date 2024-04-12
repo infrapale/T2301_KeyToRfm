@@ -1,9 +1,34 @@
+/*******************************************************************************
+Key Press to Relay Functions
+********************************************************************************
+Keypad 1
+  --------------------------------------------
+  |5:                   |1:                  |
+  --------------------------------------------
+  |6:                   |2:                  |
+  --------------------------------------------
+  |7:                   |3:                  |
+  --------------------------------------------
+  |8: HH:MM             |4: Valitse/Alkkun   |
+  --------------------------------------------
+
+Keypad 2
+  --------------------------------------------
+  |5: KHH+PSH+Sauna     |1: MH2              |
+  --------------------------------------------
+  |6: Tupa              |2: Eteinen          |
+  --------------------------------------------
+  |7: Keittio           |3: MH1              |
+  --------------------------------------------
+  |8: Ranta             |4: Ulko             |
+  --------------------------------------------
+
+
+********************************************************************************
+*/
 
 #include "relay.h"
 #include "func.h"
-
-
-
 
 key_function_st key_func[NBR_KEY_PADS][NBR_KEYS_PER_PAD] =
 {
@@ -18,14 +43,14 @@ key_function_st key_func[NBR_KEY_PADS][NBR_KEYS_PER_PAD] =
     {FUNC_RELAY_GROUP,VA_RELAY_GROUP_KHH},
   },
   {
-    {FUNC_RELAY, VA_RELAY_KHH_1},
-    {FUNC_RELAY, VA_RELAY_POLKU},
+    {FUNC_RELAY_GROUP, VA_RELAY_GROUP_MH2},
+    {FUNC_RELAY_GROUP, VA_RELAY_GROUP_WC},
     {FUNC_RELAY, VA_RELAY_ET},
-    {FUNC_RELAY, VA_RELAY_ET},
-    {FUNC_RELAY, VA_RELAY_SAUNA},
-    {FUNC_RELAY, VA_RELAY_POLKU},
+    {FUNC_RELAY_GROUP, VA_RELAY_GROUP_MH1},
+    {FUNC_RELAY_GROUP, VA_RELAY_GROUP_KHH},
     {FUNC_RELAY_GROUP, VA_RELAY_GROUP_TUPA},
-    {FUNC_RELAY_GROUP,VA_RELAY_GROUP_KHH},
+    {FUNC_RELAY_GROUP,VA_RELAY_GROUP_K},
+    {FUNC_RELAY, VA_RELAY_POLKU},
   }
 };
 

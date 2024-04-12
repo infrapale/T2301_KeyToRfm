@@ -15,12 +15,19 @@ typedef enum
   MENU_NBR_OF  
 } menu_index_et;
 
+typedef enum
+{
+  MENU_CAT_EMPTY = 0,
+  MENU_CAT_ACTIVE,
+  MENU_CAT_SHOW_TIME
+} menu_category_et;
+
 typedef void (*menu_cb)(void);
 
 typedef struct 
 {
   char      label[LABEL_LEN +1];
-  uint8_t   active;
+  uint8_t   category;
   uint8_t   next_level;
   menu_cb   cb;
 }  menu_item_st;
@@ -34,5 +41,7 @@ void menu4x2_show(uint8_t mindx);
 bool menu4x2_key_do_menu(char key);
 
 void menu4x2_key_pressed(char key);
+
+void menu4x2_timeout_task(void);
 
 #endif

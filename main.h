@@ -14,6 +14,8 @@
 typedef enum {
   TASK_READ_KEY = 0,
   TASK_SEND_RFM,
+  TASK_MENU_TIMEOUT,
+  TASK_SIGNAL,
   TASK_UPDATE_CLOCK24,
   TASK_DEBUG,
   TASK_NBR_OF
@@ -34,7 +36,6 @@ typedef struct
 typedef struct
 {
   time_st time;
-  status_et status;
   uint16_t light;
 } main_ctrl_st;
 

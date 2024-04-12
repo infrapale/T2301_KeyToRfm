@@ -2,7 +2,10 @@
 #include "main.h"
 #include <LiquidCrystal_PCF8574.h>
 #include "menu4x2.h"
+#include "signal.h"
 
+#define TIMEOUT_MENU         10000
+#define TIMEOUT_BACK_LIGHT   30000
 
 typedef struct
 {
@@ -12,11 +15,15 @@ typedef struct
 
 typedef struct 
 {
-   uint8_t level;
+   uint8_t  level;
+   uint32_t bl_timeout_at;
+   uint32_t menu_timeout_at;
 } menu4x2_ctrl_st;
 
 extern LiquidCrystal_PCF8574 lcd;
 extern main_ctrl_st main_ctrl;
+
+menu4x2_ctrl_st menu4x2_ctrl;
 
 void dummy_menu(void)
 {
@@ -29,20 +36,35 @@ void hour_plus(void)
 }
 void hour_minus(void)
 {
-    if(main_ctrl.time.hour > 0) main_ctrl.time.hour = 23;
+    if(main_ctrl.time.hour > 0) main_ctrl.time.hour--;
+    else main_ctrl.time.hour = 23;
 }
 
-void minute_plus(void)
+void minute_plus_10(void)
 {
-    if(++main_ctrl.time.minute > 59) main_ctrl.time.minute = 0;
+    main_ctrl.time.minute +=  10;
+    if(main_ctrl.time.minute > 59) main_ctrl.time.minute -= 60;
 }
-void minute_minus(void)
+void minute_plus_1(void)
 {
-    if(main_ctrl.time.minute > 0) main_ctrl.time.minute--;
-    else  main_ctrl.time.minute = 59;
+    if(++main_ctrl.time.minute > 59) main_ctrl.time.minute -=60;
+}
+ 
+void set_signal_state_at_home(void)
+{
+   signal_set_state(SIGNAL_AT_HOME);
 }
 
-menu4x2_ctrl_st menu4x2_ctrl;
+void set_signal_state_alarm(void)
+{
+   signal_set_state(SIGNAL_ALARM);
+}
+
+void set_signal_state_countdownat_home(void)
+{
+   signal_set_state(SIGNAL_COUNTDOWN);
+}
+
 
 
 const menu_def_st menu4x2_def[MENU_TOTAL] =
@@ -61,53 +83,61 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
 {
   [MENU_MAIN] =
   {
-    { "12:33     ", 0, MENU_MAIN, dummy_menu},
-    { "          ", 0, MENU_MAIN, dummy_menu},
-    { "          ", 0, MENU_MAIN, dummy_menu},
-    { "Valitse   ", 1, MENU_OPTION, dummy_menu},
-    { "          ", 0, MENU_MAIN, dummy_menu},
-    { "          ", 0, MENU_MAIN, dummy_menu},
-    { "          ", 0, MENU_MAIN, dummy_menu},
-    { "Kotona?   ", 1, MENU_HOME, dummy_menu}
+    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
+    { "Valitse   ", MENU_CAT_ACTIVE    , MENU_OPTION, dummy_menu},
+    { "          ", MENU_CAT_SHOW_TIME , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_HOME, dummy_menu}
   },
   [MENU_OPTION] =
   {
-    { "Set Time  ", 1, MENU_SET_TIME, dummy_menu},
-    { "          ", 0, MENU_HOME, dummy_menu},
-    { "All Off   ", 0, MENU_MAIN, dummy_menu},
-    { "Takaisin  ", 1, MENU_MAIN, dummy_menu},
-    { "          ", 0, MENU_MAIN, dummy_menu},
-    { "          ", 0, MENU_MAIN, dummy_menu},
-    { "          ", 0, MENU_MAIN, dummy_menu},
-    { "          ", 0, MENU_MAIN, dummy_menu}
+    { "Set Time  ", MENU_CAT_ACTIVE    , MENU_SET_TIME, dummy_menu},
+    { "Kotona??  ", MENU_CAT_ACTIVE    , MENU_HOME, dummy_menu},
+    { "All Off   ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu}
   },
   [MENU_SET_TIME] =
   {
-    { "          ", 0, MENU_MAIN, dummy_menu},
-    { "Tunti+1   ", 1, MENU_SET_TIME, hour_plus},
-    { "Tunti-1   ", 1, MENU_SET_TIME, hour_minus},
-    { "Alkuun    ", 1, MENU_MAIN, dummy_menu},
-    { "          ", 0, MENU_MAIN, dummy_menu},
-    { "Minuutti+ ", 1, MENU_SET_TIME, minute_plus},
-    { "Minuutti- ", 1, MENU_SET_TIME, minute_minus},
-    { "          ", 0, MENU_OPTION, dummy_menu},
+    { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "Min + 10  ", MENU_CAT_ACTIVE    , MENU_SET_TIME, minute_plus_10},
+    { "Min + 1   ", MENU_CAT_ACTIVE    , MENU_SET_TIME, minute_plus_1},
+    { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_SHOW_TIME , MENU_SET_TIME, dummy_menu},
+    { "Tunti+1   ", MENU_CAT_ACTIVE    , MENU_SET_TIME, hour_plus},
+    { "Tunti-1   ", MENU_CAT_ACTIVE    , MENU_SET_TIME, hour_minus},
+    { "Hyvaksy   ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
   },
   [MENU_HOME] =
   {
-    { "Kotona    ", 1, MENU_MAIN, dummy_menu},
-    { "          ", 0, MENU_MAIN, dummy_menu},
-    { "          ", 0, MENU_MAIN, dummy_menu},
-    { "Alkuun    ", 1, MENU_MAIN, dummy_menu},
-    { "Poissa    ", 1, MENU_MAIN, dummy_menu},
-    { "          ", 0, MENU_MAIN, dummy_menu},
-    { "          ", 0, MENU_MAIN, dummy_menu},
-    { "          ", 0, MENU_MAIN, dummy_menu}
+    { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "Kotona    ", MENU_CAT_ACTIVE    , MENU_MAIN, set_signal_state_at_home},
+    { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "Poissa    ", MENU_CAT_ACTIVE    , MENU_MAIN, set_signal_state_alarm},
+    { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu}
   },
 };
+
+void menu4x2_reset_timeout(void)
+{
+  menu4x2_ctrl.menu_timeout_at = millis() + TIMEOUT_MENU;
+  menu4x2_ctrl.bl_timeout_at = millis() + TIMEOUT_BACK_LIGHT;
+}
 
 void menu4x2_initialize(void)
 {
   menu4x2_ctrl.level = MENU_MAIN;
+  menu4x2_reset_timeout();
+  lcd.setBacklight(1);
   menu4x2_show(MENU_MAIN);
 
 }
@@ -116,30 +146,27 @@ void menu4x2_initialize(void)
 void menu4x2_show(uint8_t mindx)
 {
     char line0[21];
-    lcd.setBacklight(255);
+    //lcd.setBacklight(1);
     lcd.home();
     lcd.clear();
 
 
     for (uint8_t i = 0; i < MENU_TOTAL; i++)
     {
-      if ((i==4))  // && (mindx == MENU_MAIN))
+      switch( menu4x2[menu4x2_ctrl.level][i].category )
       {
+        case MENU_CAT_EMPTY:
+          break;
+        case MENU_CAT_ACTIVE:
+          lcd.setCursor(menu4x2_def[i].col, menu4x2_def[i].row);
+          lcd.print(menu4x2[mindx][i].label);
+          break;  
+        case MENU_CAT_SHOW_TIME:
           lcd.setCursor(0,0);
           sprintf(line0, "%02d:%02d", main_ctrl.time.hour, main_ctrl.time.minute);
           lcd.print (line0);
           Serial.println(line0);
-          // lcd.print(main_ctrl.time.hour);
-          // lcd.print(" :");
-          // lcd.print(main_ctrl.time.minute);
-      }
-
-
-
-      else
-      {
-        lcd.setCursor(menu4x2_def[i].col, menu4x2_def[i].row);
-        lcd.print(menu4x2[mindx][i].label);
+          break;
       }
     }
 }
@@ -151,7 +178,7 @@ bool menu4x2_key_do_menu(char key)
   uint8_t ikey = key - '1';
   if (ikey < MENU_TOTAL)
   {
-    if (menu4x2[menu4x2_ctrl.level][ikey].active > 0) do_menu = true;
+    if (menu4x2[menu4x2_ctrl.level][ikey].category >= MENU_CAT_ACTIVE) do_menu = true;
   }
   return do_menu;
 }
@@ -163,11 +190,36 @@ void menu4x2_key_pressed(char key)
   uint8_t next_menu;
   if (ikey < MENU_TOTAL)
   {
+      menu4x2_reset_timeout();
+      lcd.setBacklight(1);
+
       next_menu = menu4x2[menu4x2_ctrl.level][ikey].next_level;
       menu4x2[menu4x2_ctrl.level][ikey].cb();
       menu4x2_ctrl.level = next_menu;
       menu4x2_show(menu4x2_ctrl.level);
   }
+}
 
+void menu4x2_timeout_task(void)
+{
+    if (menu4x2_ctrl.menu_timeout_at < millis())
+    {
+      menu4x2_ctrl.level = MENU_MAIN;
+      menu4x2_show(menu4x2_ctrl.level);
+      menu4x2_ctrl.menu_timeout_at = millis() + TIMEOUT_MENU;
+    } 
+
+    if (menu4x2_ctrl.bl_timeout_at < millis())
+    {
+      lcd.setBacklight(0);
+      menu4x2_ctrl.bl_timeout_at = millis() + TIMEOUT_BACK_LIGHT;
+    }
+
+    if (digitalRead(PIN_PIR) == HIGH)
+    {
+      menu4x2_ctrl.bl_timeout_at = millis() + TIMEOUT_BACK_LIGHT;
+      lcd.setBacklight(1);
+    }
 
 }
+

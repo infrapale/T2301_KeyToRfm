@@ -66,4 +66,8 @@ void kbd_print_mesage(void);
 /// @return -
 // void kbd_uart_print_rx_metadata(void);
 
+void run_read_key_commands(void);
+void run_send_key_commands(void);
+
+
 #endif
