@@ -5,8 +5,9 @@
 #define APP_NAME "T2401_KeyToRfm"
 #define RFM_SEND_INTERVAL 2000
 
-#define SerialKbd Serial1
-#define SerialRfm Serial2
+#define SerialKbd   Serial1
+#define SerialRfm   Serial2
+#define SerialClock Serial2
 #define PIN_NEO_PIXEL 22
 #define PIN_PIR       15
 #define PIN_LDR       26
@@ -16,7 +17,7 @@ typedef enum {
   TASK_SEND_RFM,
   TASK_MENU_TIMEOUT,
   TASK_SIGNAL,
-  TASK_UPDATE_CLOCK24,
+  TASK_AUTOM,
   TASK_DEBUG,
   TASK_NBR_OF
 } tasks_et;

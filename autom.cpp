@@ -2,6 +2,9 @@
 #include "main.h"
 #include "relay.h"
 
+#define HOURS_PER_DAY     24
+#define MINUTES_PER_HOUR  60
+#define MINUTES_PER_DAY   (HOURS_PER_DAY * MINUTES_PER_HOUR)
 
 typedef enum
 {
@@ -12,16 +15,24 @@ typedef enum
 
 typedef struct
 {
-    int8_t  offs_min;
+   task_st  *th;
+    uint8_t hour;
+    uint8_t minute;
+} autom_cntrl_st;
+
+typedef struct
+{
     uint8_t hindx;
     relay_autom_state_et autom_state;
-} autom_cntrl_st;
+} autom_relay_st;
+
+autom_cntrl_st autom_cntrl;
 
 char week_day[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
 datetime_t rtc_time;
 
-const uint8_t auto_prog[VA_RELAY_NBR_OF][24]=
+const uint8_t auto_prog[VA_RELAY_NBR_OF][HOURS_PER_DAY]=
 {   // relay                   00    01    02    03    04    05    06    07    08    09    10    11    12    13    14    15    16    17    18    19    20    21    22    23
     [VA_RELAY_UNDEF]      = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
     [VA_RELAY_TK]         = { 0x01, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00 },
@@ -53,16 +64,72 @@ const uint8_t auto_prog[VA_RELAY_NBR_OF][24]=
 };
 
 
- autom_cntrl_st autom_cntrl[VA_RELAY_NBR_OF];
+ autom_relay_st autom_relay[VA_RELAY_NBR_OF];
 
  
-void autom_initialize(void)
+void autom_initialize(uint8_t hour, uint8_t minute)
 {
+    autom_cntrl.hour = hour;
+    autom_cntrl.minute = minute;
+    autom_cntrl.th = task_get_task(TASK_AUTOM);
+    autom_cntrl.th->state = 0;
+
     for (uint8_t i = VA_RELAY_UNDEF; i < VA_RELAY_NBR_OF; i++)
     {
-        autom_cntrl[i].hindx = 0;
-        autom_cntrl[i].offs_min = 0;
-        autom_cntrl[i].autom_state = RELAY_AUTOM_STATE_OFF;
+        autom_relay[i].hindx = 0;
+        autom_relay[i].autom_state = RELAY_AUTOM_STATE_OFF;
     }
 }  
+
+void autom_randomize(void)
+{
+    uint16_t hm = (uint16_t)autom_cntrl.hour * MINUTES_PER_HOUR + (uint16_t)autom_cntrl.minute;
+    randomSeed(hm);
+
+    for (uint8_t i = VA_RELAY_UNDEF; i < VA_RELAY_NBR_OF; i++)
+    {
+        long l = random(-30,30);  // Serial.println(l);
+        uint16_t hmx = hm + (uint16_t)l;
+        if (hmx > MINUTES_PER_DAY) hmx -= MINUTES_PER_DAY;
+        uint16_t hx = hmx / MINUTES_PER_HOUR;
+        // Serial.println(hx);
+        autom_relay[i].hindx = (uint8_t)hx;
+    }
+}
+
+void autom_set_time(uint8_t hour, uint8_t minute)
+{
+    autom_cntrl.hour = hour;
+    autom_cntrl.minute = minute;
+}
+
+void autom_task()
+{
+    switch(autom_cntrl.th->state)
+    {
+        case 0:
+            break;
+        case 1:
+            break;
+        case 2:
+            break;
+        case 3:
+            break;
+        case 4:
+            break;
+        case 5:
+            break;
+        case 6:
+            break;
+        case 10:
+            break;
+        case 20:
+            break;
+    }
+    for (uint8_t i = VA_RELAY_UNDEF; i < VA_RELAY_NBR_OF; i++)
+    {
+      auto_prog[i][]
+    }
+
+}
 
