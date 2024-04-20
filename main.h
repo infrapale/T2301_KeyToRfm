@@ -17,10 +17,17 @@ typedef enum {
   TASK_SEND_RFM,
   TASK_MENU_TIMEOUT,
   TASK_SIGNAL,
+  TASK_SIGNAL_STATE,
   TASK_AUTOM,
   TASK_DEBUG,
   TASK_NBR_OF
 } tasks_et;
+
+typedef enum {
+  SEMA_SERIAL2 = 0,
+  SEMA_XXX
+} sema_et;
+
 
 typedef enum {
   STATUS_AT_HOME = 0,

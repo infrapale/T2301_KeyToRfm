@@ -32,6 +32,8 @@ typedef enum
   SIGNAL_START = 0,
   SIGNAL_AT_HOME,
   SIGNAL_COUNTDOWN,
+  SIGNAL_AWAY,
+  SIGNAL_WARNING,
   SIGNAL_ALARM,
   SIGNAL_SENDING,
   SIGNAL_NBR_OF
@@ -51,6 +53,8 @@ void signal_initialize(void);
 void signal_update(void);
 
 void signal_set_state(signal_state_et new_state);
+
+signal_state_et signal_get_state(void);
 
 void signal_return_state(void);
 

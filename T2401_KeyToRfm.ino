@@ -73,8 +73,9 @@ void debug_print_task(void);
 task_st read_key_task_handle      = {"Read Key       ", 100,0, 0, 255, run_read_key_commands };
 task_st send_key_task_handle      = {"Send Key       ", 10, 0, 0, 255, run_send_key_commands };
 task_st menu_timeout_task_handle  = {"Menu Timeout   ", 1000, 0, 0, 255, menu4x2_timeout_task };
-task_st signal_task_handle        = {"Signal     t   ", 100, 0, 0, 255, signal_update};
-task_st autom_task_handle         = {"Automation     ", 100,0, 0, 255, autom_task};
+task_st signal_task_handle        = {"Signal fast    ", 100, 0, 0, 255, signal_update};
+task_st signal_state_task_handle  = {"Signal state   ", 1000, 0, 0, 255, signal_state_machine};
+task_st autom_task_handle         = {"Automation     ", 1000,0, 0, 255, autom_task};
 task_st debug_print_handle        = {"Debug Print    ", 2000,0, 0, 255, debug_print_task};
 
 int show = -1;
@@ -126,10 +127,9 @@ void setup() {
   task_set_task(TASK_SEND_RFM, &send_key_task_handle); 
   task_set_task(TASK_MENU_TIMEOUT, &menu_timeout_task_handle); 
   task_set_task(TASK_SIGNAL, &signal_task_handle);
-
+  task_set_task(TASK_SIGNAL_STATE,&signal_state_task_handle);
   task_set_task(TASK_AUTOM, &autom_task_handle);
   task_set_task(TASK_DEBUG, &debug_print_handle);
-  //main_ctrl.status = STATUS_AWAY;
   kbd_uart_initialize();
   //clock24_initialize();
   menu4x2_initialize();

@@ -4,6 +4,7 @@
 #endif
 #include "main.h"
 #include "signal.h"
+#include "autom.h"
 
 #define RGB_PIX_PIN     22
 
@@ -11,10 +12,13 @@ typedef struct
 {
   signal_state_et state;
   signal_state_et prev_state;
+  signal_state_et state_request;
+  task_st  *sm;
 
   uint8_t one_pix_state;
   uint8_t seq_indx;
   uint8_t seq_cntr;
+  uint32_t sm_millis;
 } signal_st;
 
 
@@ -50,11 +54,46 @@ signal_seq signal_pattern[SIGNAL_NBR_OF] =
   [SIGNAL_START]      = {{RGB_INDX_YELLOW , 5}, {RGB_INDX_BLACK, 5},  {RGB_INDX_BLACK, 0}},
   [SIGNAL_AT_HOME]    = {{RGB_INDX_GREEN  , 2}, {RGB_INDX_BLACK, 5},  {RGB_INDX_BLACK, 0}},
   [SIGNAL_COUNTDOWN]  = {{RGB_INDX_YELLOW , 2}, {RGB_INDX_GREEN, 5},  {RGB_INDX_BLACK, 0}},
-  [SIGNAL_ALARM]      = {{RGB_INDX_RED , 2}, {RGB_INDX_BLACK, 5},  {RGB_INDX_BLACK, 0}},
-  [SIGNAL_SENDING]    = {{RGB_INDX_CYAN , 2}, {RGB_INDX_BLACK, 2},  {RGB_INDX_BLACK, 0}},
+  [SIGNAL_AWAY]       = {{RGB_INDX_RED , 4},    {RGB_INDX_YELLOW, 4}, {RGB_INDX_BLACK, 10}},
+  [SIGNAL_WARNING]    = {{RGB_INDX_RED , 1},    {RGB_INDX_BLUE, 1},   {RGB_INDX_BLACK, 2}},
+  [SIGNAL_ALARM]      = {{RGB_INDX_RED , 2},    {RGB_INDX_BLACK, 5},  {RGB_INDX_BLACK, 0}},
+  [SIGNAL_SENDING]    = {{RGB_INDX_CYAN , 2},   {RGB_INDX_BLACK, 2},  {RGB_INDX_BLACK, 0}},
 };
 
+
 signal_st signal;
+
+relay_prog_et signal_to_relay_program(signal_state_et signal) 
+{
+  relay_prog_et rprog;
+
+  switch(signal)
+  {
+    case SIGNAL_START:
+      rprog = RELAY_PROG_AT_HOME ;
+      break;
+    case SIGNAL_AT_HOME:
+      rprog = RELAY_PROG_AT_HOME;
+      break;
+    case SIGNAL_COUNTDOWN:
+      rprog = RELAY_PROG_AT_HOME ;
+      break;
+    case SIGNAL_AWAY:
+      rprog = RELAY_PROG_AWAY ;
+      break;
+    case SIGNAL_ALARM:
+      rprog = RELAY_PROG_ALARM ;
+      break;
+    case SIGNAL_SENDING:
+      rprog = RELAY_PROG_UNDEF ;
+      break;
+    case SIGNAL_NBR_OF:
+      rprog = RELAY_PROG_UNDEF ;
+      break;
+  }
+  return rprog;
+}
+
 
 void signal_initialize(void)
 {
@@ -63,7 +102,9 @@ void signal_initialize(void)
     signal.one_pix_state = 0;
     signal.state = SIGNAL_START;
     signal.prev_state = SIGNAL_START;
-
+    signal.state_request = SIGNAL_START;
+    signal.sm = task_get_task(TASK_SIGNAL_STATE);
+    signal.sm->state = 0;
     signal.seq_indx = 0;
     signal.seq_cntr = 0;
     color_u32 =  RGB_MAGENTA; 
@@ -74,15 +115,28 @@ void signal_initialize(void)
     one_pix.show(); // Initialize all pixels to 'off'
 }
 
+
 void signal_set_state(signal_state_et new_state)
 {
     signal.prev_state = signal.state;
     signal.state = new_state;
+
+    relay_prog_et rprog = signal_to_relay_program(signal.state);
+    autom_set_program(rprog);
 }
+
+signal_state_et signal_get_state(void)
+{
+   return signal.state;
+}
+
+
 
 void signal_return_state(void)
 {
     signal.state = signal.prev_state;
+    relay_prog_et rprog = signal_to_relay_program(signal.state);
+    autom_set_program(rprog);
 }
 
 
@@ -103,5 +157,71 @@ void signal_update(void)
     // one_pix.show(); // Initialize all pixels to 'off'
     // if(++signal.one_pix_state >= RGB_INDX_NBR_OF) signal.one_pix_state = 0;      
 
+
+}
+
+void signal_state_machine(void)
+{
+    switch(autom_cntrl.th->state)
+    {
+      case 0:  // Starting ...
+        signal.sm_millis = millis() + 5000;
+        signal_set_state(SIGNAL_START);
+        autom_cntrl.th->state++;
+        break;
+      case 1:  // Start state
+        if(millis() > signal.sm_millis)
+        {
+          signal_set_state(SIGNAL_AT_HOME);
+          autom_cntrl.th->state++;
+        }
+        break;
+      case 2:   // At home state
+        switch(signal)
+        {
+          case SIGNAL_START:
+          case SIGNAL_AT_HOME:
+          case SIGNAL_COUNTDOWN:
+          case SIGNAL_AWAY:
+            rprog = RELAY_PROG_AWAY ;
+            break;
+          case SIGNAL_ALARM:
+            rprog = RELAY_PROG_ALARM ;
+            break;
+          case SIGNAL_SENDING:
+            rprog = RELAY_PROG_UNDEF ;
+            break;
+          case SIGNAL_NBR_OF:
+            rprog = RELAY_PROG_UNDEF ;
+            break;
+        }
+        
+        //autom_cntrl.th->state++;
+        break;
+      case 3:
+        autom_cntrl.th->state++;
+        break;
+      case 4:
+        autom_cntrl.th->state++;
+        break;
+      case 5:
+        autom_cntrl.th->state++;
+        break;
+      case 6:
+        autom_cntrl.th->state++;
+        break;
+      case 7:
+        autom_cntrl.th->state++;
+        break;
+      case 8:
+        autom_cntrl.th->state++;
+        break;
+      case 9:
+        autom_cntrl.th->state++;
+        break;
+      case 10:
+        autom_cntrl.th->state++;
+        break;
+    }
 
 }

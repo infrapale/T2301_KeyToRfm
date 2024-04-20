@@ -6,7 +6,7 @@
 #include "kbd_uart.h"
 #include "signal.h"
 //#include "json.h"
-
+#include "sema.h"
 
 
 extern main_ctrl_st main_ctrl;
@@ -200,15 +200,20 @@ void run_send_key_commands(void)
           else Serial.println("func_get_key failed");
       }
       break;
-    case 10:  // single relay function
+
+    case 10:
+      if (sema_reserve(SEMA_SERIAL2)) state++;
+      break;  
+    case 11:  // single relay function
       signal_set_state(SIGNAL_SENDING);
       relay_send_one((va_relays_et)func_data.indx, key_data.value );
       next_send_ms = millis() + RFM_SEND_INTERVAL;
       state++;
       break;
-    case 11:
+    case 12:
       if (millis() > next_send_ms)
       {
+        sema_release(SEMA_SERIAL2);
         state = 0;
         signal_return_state();
       } 
@@ -235,13 +240,20 @@ void run_send_key_commands(void)
       }
       break;  
     case 22: 
+      if (sema_reserve(SEMA_SERIAL2)) state++;
+      break;
+    case 23:
       relay_send_one((va_relays_et)relay_indx, key_data.value );
       next_send_ms = millis() + RFM_SEND_INTERVAL;
       relay_indx++;
       state++;
       break;
-    case 23:
-      if (millis() > next_send_ms) state = 21;
+    case 24:
+      if (millis() > next_send_ms) 
+      {
+        sema_release(SEMA_SERIAL2);
+        state = 21;
+      }  
       break;  
     case 30:
       if (kbd_ring_get_key(&key_data))
