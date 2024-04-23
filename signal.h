@@ -29,16 +29,39 @@ typedef enum
 
 typedef enum
 {
-  SIGNAL_START = 0,
-  SIGNAL_AT_HOME,
-  SIGNAL_COUNTDOWN,
-  SIGNAL_AWAY,
-  SIGNAL_WARNING,
-  SIGNAL_ALARM,
-  SIGNAL_SENDING,
-  SIGNAL_NBR_OF
+  SIGNAL_STATE_START     = 0x00,
+  SIGNAL_STATE_AT_HOME   = 0x10,
+  SIGNAL_STATE_COUNTDOWN = 0x20,
+  SIGNAL_STATE_AWAY      = 0x30,
+  SIGNAL_STATE_WARNING   = 0x40,
+  SIGNAL_STATE_ALARM     = 0x50,
+  SIGNAL_STATE_SENDING   = 0x60,
 } signal_state_et;
 
+typedef enum
+{
+  SIGNAL_INDEX_START = 0,
+  SIGNAL_INDEX_AT_HOME,
+  SIGNAL_INDEX_COUNTDOWN,
+  SIGNAL_INDEX_AWAY,
+  SIGNAL_INDEX_WARNING,
+  SIGNAL_INDEX_ALARM,
+  SIGNAL_INDEX_SENDING,
+  SIGNAL_INDEX_NBR_OF
+} signal_index_et;
+
+typedef enum
+{
+  SIGNAL_EVENT_UNDEFINED = 0,
+  SIGNAL_EVENT_LOGIN,
+  SIGNAL_EVENT_LOGOUT,
+  SIGNAL_EVENT_LEAVE,
+  SIGNAL_EVENT_ALERT,
+  SIGNAL_EVENT_CONFIRM,
+  SIGNAL_EVENT_SENDING,
+  SIGNAL_EVENT_TIMEOUT,
+  SIGNAL_EVENT_NBR_OF
+} signal_event_et;
 
 typedef struct
 {
@@ -52,11 +75,17 @@ void signal_initialize(void);
 
 void signal_update(void);
 
-void signal_set_state(signal_state_et new_state);
+void signal_set_event(signal_event_et signal_event);
 
-signal_state_et signal_get_state(void);
+//void signal_set_state(signal_state_et new_state);
 
-void signal_return_state(void);
+uint8_t signal_get_state(void);
+
+char *signal_get_state_label(void);
+
+//void signal_return_state(void);
+
+void signal_state_machine(void);
 
 
 #endif

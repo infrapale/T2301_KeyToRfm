@@ -4,6 +4,7 @@
 #include "task.h"
 #include "autom.h"
 #include "signal.h"
+#include "sema.h"
 
 #define HOURS_PER_DAY     24
 #define MINUTES_PER_HOUR  60
@@ -208,7 +209,7 @@ void autom_parse_time(String *tstrp)
 void autom_task()
 {
     autom_cntrl.iter_cntr++;
-    Serial.printf("autom_task %d\n\r", autom_cntrl.th->state);
+    //Serial.printf("autom_task %d\n\r", autom_cntrl.th->state);
     switch(autom_cntrl.th->state)
     {
         case 0:  // Initial state
@@ -219,7 +220,7 @@ void autom_task()
             {
                 SerialClock.printf("<C1MS:%d>\r\n", (uint8_t)signal_get_state());
                 autom_cntrl.th->state++;
-                sema_release( SEMA_SERIAL2)
+                sema_release( SEMA_SERIAL2);
             }
             break;
         case 2:  // Request TIme
@@ -230,7 +231,7 @@ void autom_task()
                     SerialClock.printf("<C1TG:>\r\n");
                     autom_cntrl.next_get_time = autom_cntrl.iter_cntr + 60;
                     autom_cntrl.th->state++;
-                    sema_release( SEMA_SERIAL2)
+                    sema_release( SEMA_SERIAL2);
                 }
             }
             else 

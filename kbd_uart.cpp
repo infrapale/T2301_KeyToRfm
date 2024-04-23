@@ -205,7 +205,7 @@ void run_send_key_commands(void)
       if (sema_reserve(SEMA_SERIAL2)) state++;
       break;  
     case 11:  // single relay function
-      signal_set_state(SIGNAL_SENDING);
+      signal_set_event(SIGNAL_EVENT_SENDING);
       relay_send_one((va_relays_et)func_data.indx, key_data.value );
       next_send_ms = millis() + RFM_SEND_INTERVAL;
       state++;
@@ -215,11 +215,11 @@ void run_send_key_commands(void)
       {
         sema_release(SEMA_SERIAL2);
         state = 0;
-        signal_return_state();
+        //signal_return_state();
       } 
       break;  
     case 20:  // relay group
-      signal_set_state(SIGNAL_SENDING);
+      signal_set_event(SIGNAL_EVENT_SENDING);
       relay_indx = 0;
       state++;
       break;  
@@ -236,7 +236,7 @@ void run_send_key_commands(void)
       if (relay_indx >= VA_RELAY_NBR_OF) 
       {
         state = 0;
-        signal_return_state();
+        //signal_return_state();
       }
       break;  
     case 22: 

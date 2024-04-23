@@ -50,21 +50,26 @@ void minute_plus_1(void)
     if(++main_ctrl.time.minute > 59) main_ctrl.time.minute -=60;
 }
  
-void set_signal_state_at_home(void)
+
+void send_signal_event_alert(void)
 {
-   signal_set_state(SIGNAL_AT_HOME);
+   signal_set_event(SIGNAL_EVENT_ALERT);
 }
 
-void set_signal_state_alarm(void)
+void send_signal_event_leave(void)
 {
-   signal_set_state(SIGNAL_ALARM);
+   signal_set_event(SIGNAL_EVENT_LEAVE);
 }
 
-void set_signal_state_countdownat_home(void)
+void send_signal_event_login(void)
 {
-   signal_set_state(SIGNAL_COUNTDOWN);
+   signal_set_event(SIGNAL_EVENT_LOGIN);
 }
 
+void send_signal_event_confirm(void)
+{
+   signal_set_event(SIGNAL_EVENT_CONFIRM);
+}
 
 
 const menu_def_st menu4x2_def[MENU_TOTAL] =
@@ -79,6 +84,7 @@ const menu_def_st menu4x2_def[MENU_TOTAL] =
   {3 ,0},
 };
 
+
 menu4x2_t menu4x2[MENU_NBR_OF] =
 {
   [MENU_MAIN] =
@@ -87,19 +93,19 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
     { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
     { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
     { "Valitse   ", MENU_CAT_ACTIVE    , MENU_OPTION, dummy_menu},
+    { "          ", MENU_CAT_TITLE     , MENU_MAIN, dummy_menu},
     { "          ", MENU_CAT_SHOW_TIME , MENU_MAIN, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_HOME, dummy_menu}
+    { "          ", MENU_CAT_STATE     , MENU_MAIN, dummy_menu},
+    { "Test      ", MENU_CAT_ACTIVE    , MENU_TEST, dummy_menu}
   },
   [MENU_OPTION] =
   {
     { "Set Time  ", MENU_CAT_ACTIVE    , MENU_SET_TIME, dummy_menu},
-    { "Kotona??  ", MENU_CAT_ACTIVE    , MENU_HOME, dummy_menu},
+    { "Kotona    ", MENU_CAT_ACTIVE    , MENU_MAIN, send_signal_event_login},
     { "All Off   ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
     { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
+    { "Kuittaa   ", MENU_CAT_ACTIVE    , MENU_MAIN, send_signal_event_confirm},
+    { "Poissa    ", MENU_CAT_ACTIVE    , MENU_MAIN, send_signal_event_leave},
     { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
     { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu}
   },
@@ -117,15 +123,27 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
   [MENU_HOME] =
   {
     { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
-    { "Kotona    ", MENU_CAT_ACTIVE    , MENU_MAIN, set_signal_state_at_home},
+    { "Kotona    ", MENU_CAT_ACTIVE    , MENU_MAIN, send_signal_event_login},
     { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
     { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
     { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
-    { "Poissa    ", MENU_CAT_ACTIVE    , MENU_MAIN, set_signal_state_alarm},
+    { "Poissa    ", MENU_CAT_ACTIVE    , MENU_MAIN, send_signal_event_leave},
     { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
     { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu}
   },
+  [MENU_TEST] =
+  {
+    { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "Kotona    ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "Login     ", MENU_CAT_ACTIVE    , MENU_MAIN, send_signal_event_login},
+    { "Leave     ", MENU_CAT_ACTIVE    , MENU_MAIN, send_signal_event_leave},
+    { "Alert     ", MENU_CAT_ACTIVE    , MENU_MAIN, send_signal_event_alert},
+    { "Confirm   ", MENU_CAT_ACTIVE    , MENU_MAIN, send_signal_event_confirm}
+  },
 };
+
 
 void menu4x2_reset_timeout(void)
 {
@@ -162,8 +180,21 @@ void menu4x2_show(uint8_t mindx)
           lcd.print(menu4x2[mindx][i].label);
           break;  
         case MENU_CAT_SHOW_TIME:
-          lcd.setCursor(0,0);
+          lcd.setCursor(menu4x2_def[i].col, menu4x2_def[i].row);
+          //lcd.setCursor(0,0);
           sprintf(line0, "%02d:%02d", main_ctrl.time.hour, main_ctrl.time.minute);
+          lcd.print (line0);
+          Serial.println(line0);
+          break;
+        case MENU_CAT_TITLE:
+          lcd.setCursor(menu4x2_def[i].col, menu4x2_def[i].row);
+          sprintf(line0, "Villa Astrid");
+          lcd.print (line0);
+          Serial.println(line0);
+          break;
+        case MENU_CAT_STATE:
+          lcd.setCursor(menu4x2_def[i].col, menu4x2_def[i].row);
+          sprintf(line0, "%s", signal_get_state_label());
           lcd.print (line0);
           Serial.println(line0);
           break;

@@ -5,7 +5,7 @@ typedef enum
   RELAY_PROG_AT_HOME  = 0x01,
   RELAY_PROG_AWAY     = 0x02,
   RELAY_PROG_ALARM    = 0x04,
-  RELAY_PROG_4        = 0x08,
+  RELAY_PROG_WARNING  = 0x08,
   RELAY_PROG_5        = 0x10,
   RELAY_PROG_6        = 0x20,
   RELAY_PROG_7        = 0x40,

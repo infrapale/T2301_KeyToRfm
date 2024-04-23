@@ -5,16 +5,18 @@
 #include "main.h"
 #include "signal.h"
 #include "autom.h"
+#include "task.h"
 
 #define RGB_PIX_PIN     22
 
 typedef struct
 {
-  signal_state_et state;
-  signal_state_et prev_state;
+  signal_event_et event;
+  //signal_state_et state;
+  //signal_state_et prev_state;
   signal_state_et state_request;
   task_st  *sm;
-
+  relay_prog_et relay_prog;
   uint8_t one_pix_state;
   uint8_t seq_indx;
   uint8_t seq_cntr;
@@ -49,64 +51,46 @@ uint32_t signal_color[RGB_INDX_NBR_OF] =
   RGB_YELLOW,
 } ;
 
-signal_seq signal_pattern[SIGNAL_NBR_OF] = 
+signal_seq signal_pattern[SIGNAL_INDEX_NBR_OF] = 
 {
-  [SIGNAL_START]      = {{RGB_INDX_YELLOW , 5}, {RGB_INDX_BLACK, 5},  {RGB_INDX_BLACK, 0}},
-  [SIGNAL_AT_HOME]    = {{RGB_INDX_GREEN  , 2}, {RGB_INDX_BLACK, 5},  {RGB_INDX_BLACK, 0}},
-  [SIGNAL_COUNTDOWN]  = {{RGB_INDX_YELLOW , 2}, {RGB_INDX_GREEN, 5},  {RGB_INDX_BLACK, 0}},
-  [SIGNAL_AWAY]       = {{RGB_INDX_RED , 4},    {RGB_INDX_YELLOW, 4}, {RGB_INDX_BLACK, 10}},
-  [SIGNAL_WARNING]    = {{RGB_INDX_RED , 1},    {RGB_INDX_BLUE, 1},   {RGB_INDX_BLACK, 2}},
-  [SIGNAL_ALARM]      = {{RGB_INDX_RED , 2},    {RGB_INDX_BLACK, 5},  {RGB_INDX_BLACK, 0}},
-  [SIGNAL_SENDING]    = {{RGB_INDX_CYAN , 2},   {RGB_INDX_BLACK, 2},  {RGB_INDX_BLACK, 0}},
+  [SIGNAL_INDEX_START]      = {{RGB_INDX_YELLOW , 5}, {RGB_INDX_BLACK, 5},  {RGB_INDX_BLACK, 0}},
+  [SIGNAL_INDEX_AT_HOME]    = {{RGB_INDX_GREEN  , 2}, {RGB_INDX_BLACK, 5},  {RGB_INDX_BLACK, 0}},
+  [SIGNAL_INDEX_COUNTDOWN]  = {{RGB_INDX_YELLOW , 2}, {RGB_INDX_GREEN, 5},  {RGB_INDX_BLACK, 0}},
+  [SIGNAL_INDEX_AWAY]       = {{RGB_INDX_RED , 4},    {RGB_INDX_YELLOW, 4}, {RGB_INDX_BLACK, 10}},
+  [SIGNAL_INDEX_WARNING]    = {{RGB_INDX_RED , 1},    {RGB_INDX_BLUE, 1},   {RGB_INDX_BLACK, 2}},
+  [SIGNAL_INDEX_ALARM]      = {{RGB_INDX_RED , 2},    {RGB_INDX_BLACK, 5},  {RGB_INDX_BLACK, 0}},
+  [SIGNAL_INDEX_SENDING]    = {{RGB_INDX_CYAN , 2},   {RGB_INDX_BLACK, 2},  {RGB_INDX_BLACK, 0}},
+};
+
+char state_label[SIGNAL_INDEX_NBR_OF][20] =
+{
+// 0123456789  
+  "Start    ",
+  "Kotona   ",
+  "Countdown",
+  "Poissa   ",
+  "Varoitus ",
+  "Halytys  ",
+  "Lahettaa "
 };
 
 
 signal_st signal;
-
-relay_prog_et signal_to_relay_program(signal_state_et signal) 
-{
-  relay_prog_et rprog;
-
-  switch(signal)
-  {
-    case SIGNAL_START:
-      rprog = RELAY_PROG_AT_HOME ;
-      break;
-    case SIGNAL_AT_HOME:
-      rprog = RELAY_PROG_AT_HOME;
-      break;
-    case SIGNAL_COUNTDOWN:
-      rprog = RELAY_PROG_AT_HOME ;
-      break;
-    case SIGNAL_AWAY:
-      rprog = RELAY_PROG_AWAY ;
-      break;
-    case SIGNAL_ALARM:
-      rprog = RELAY_PROG_ALARM ;
-      break;
-    case SIGNAL_SENDING:
-      rprog = RELAY_PROG_UNDEF ;
-      break;
-    case SIGNAL_NBR_OF:
-      rprog = RELAY_PROG_UNDEF ;
-      break;
-  }
-  return rprog;
-}
-
 
 void signal_initialize(void)
 {
     uint32_t color_u32;
     
     signal.one_pix_state = 0;
-    signal.state = SIGNAL_START;
-    signal.prev_state = SIGNAL_START;
-    signal.state_request = SIGNAL_START;
+    signal.event = SIGNAL_EVENT_UNDEFINED;
+    //signal.state = SIGNAL_STATE_START;
+    //signal.prev_state = SIGNAL_STATE_START;
+    //signal.state_request = SIGNAL_START;
     signal.sm = task_get_task(TASK_SIGNAL_STATE);
     signal.sm->state = 0;
     signal.seq_indx = 0;
     signal.seq_cntr = 0;
+    signal.relay_prog = RELAY_PROG_UNDEF;
     color_u32 =  RGB_MAGENTA; 
     one_pix.begin();
     one_pix.setBrightness(255);
@@ -115,40 +99,65 @@ void signal_initialize(void)
     one_pix.show(); // Initialize all pixels to 'off'
 }
 
+/*
+  SIGNAL_EVENT_UNDEFINED = 0,
+  SIGNAL_EVENT_LOGIN,
+  SIGNAL_EVENT_LOGOUT,
+  SIGNAL_EVENT_LEAVE,
+  SIGNAL_EVENT_ALERT,
+  SIGNAL_EVENT_CONFIRM,
+  SIGNAL_EVENT_SENDING,
+  SIGNAL_EVENT_TIMEOUT,
+  SIGNAL_EVENT_NBR_OF
+*/
 
-void signal_set_state(signal_state_et new_state)
+void signal_set_event(signal_event_et signal_event)
 {
-    signal.prev_state = signal.state;
-    signal.state = new_state;
-
-    relay_prog_et rprog = signal_to_relay_program(signal.state);
-    autom_set_program(rprog);
+    signal.event = signal_event;
+    Serial.printf("Set event %d\n\r",signal.event);
 }
 
-signal_state_et signal_get_state(void)
+
+
+void xxsignal_set_state(signal_state_et new_state)
 {
-   return signal.state;
+    //signal.prev_state = signal.state;
+    //signal.state = new_state;
+
+    // relay_prog_et rprog = signal_to_relay_program(signal.state);
+    // autom_set_program(rprog);
+}
+
+uint8_t signal_get_state(void)
+{
+   return ((uint8_t)signal.sm->state >> 4);
+}
+
+char *signal_get_state_label(void)
+{
+   return state_label[signal.sm->state >> 4];
 }
 
 
 
-void signal_return_state(void)
+void xxsignal_return_state(void)
 {
-    signal.state = signal.prev_state;
-    relay_prog_et rprog = signal_to_relay_program(signal.state);
-    autom_set_program(rprog);
+    //signal.state = signal.prev_state;
+    //relay_prog_et rprog = signal_to_relay_program(signal.state);
+    //autom_set_program(rprog);
 }
 
 
 void signal_update(void)
 {
-
-    if(++signal.seq_cntr > signal_pattern[signal.state][signal.seq_indx].duration)
+    uint8_t ind_indx = signal.sm->state >> 4;
+    //Serial.printf("state = %d indx= %d\n\r", signal.sm->state, ind_indx );
+    if(++signal.seq_cntr > signal_pattern[ind_indx][signal.seq_indx].duration)
     {
         if(++signal.seq_indx >= NBR_COLOR_SEQ) signal.seq_indx = 0;
-        if (signal_pattern[signal.state][signal.seq_indx].duration == 0) signal.seq_indx = 0;
+        if (signal_pattern[ind_indx][signal.seq_indx].duration == 0) signal.seq_indx = 0;
         signal.seq_cntr = 0;
-        one_pix.setPixelColor(0, signal_color[signal_pattern[signal.state][signal.seq_indx].color]);
+        one_pix.setPixelColor(0, signal_color[signal_pattern[ind_indx][signal.seq_indx].color]);
         one_pix.show(); // Initialize all pixels to 'off'
 
     }
@@ -160,68 +169,114 @@ void signal_update(void)
 
 }
 
+  // SIGNAL_STATE_START     = 0,
+  // SIGNAL_STATE_AT_HOME   = 10,
+  // SIGNAL_STATE_COUNTDOWN = 20,
+  // SIGNAL_STATE_AWAY      = 30,
+  // SIGNAL_STATE_WARNING   = 40,
+  // SIGNAL_STATE_ALARM     = 50,
+  // SIGNAL_STATE_SENDING   = 60,
+
+
 void signal_state_machine(void)
 {
-    switch(autom_cntrl.th->state)
+    static uint8_t prev_state = 255;
+    static uint8_t prev_event = 255;
+    if(millis() > signal.sm_millis)
     {
-      case 0:  // Starting ...
-        signal.sm_millis = millis() + 5000;
-        signal_set_state(SIGNAL_START);
-        autom_cntrl.th->state++;
+      //Serial.print('*');
+      if (signal.event ==  SIGNAL_EVENT_UNDEFINED)
+      {
+          //Serial.print('-');
+          signal.event = SIGNAL_EVENT_TIMEOUT;
+          signal.sm_millis = 0xFFFFFFFF;
+      }
+    }   
+    if ((signal.event != prev_event) || (signal.sm->state != prev_state))
+    {
+        Serial.printf("State %d, Event = %d\n\r", signal.sm->state, signal.event);
+        //Serial.printf("millis %d, sm_millis %d\n\r", millis(), signal.sm_millis);
+    }
+    switch(signal.sm->state)
+    {
+      case SIGNAL_STATE_START:  // Starting ...
+        signal.sm_millis = millis() + 1000;
+        autom_set_program(RELAY_PROG_UNDEF);
+        signal.sm->state = SIGNAL_STATE_START + 1;
         break;
-      case 1:  // Start state
-        if(millis() > signal.sm_millis)
+
+      case SIGNAL_STATE_START + 1:  // Start state
+        // TODO read from edog
+        signal.sm->state = SIGNAL_STATE_AT_HOME;
+        autom_set_program(RELAY_PROG_UNDEF);
+        signal.sm->state = SIGNAL_STATE_AT_HOME;
+        break;
+
+      case SIGNAL_STATE_AT_HOME:   // At home state
+        switch(signal.event)
         {
-          signal_set_state(SIGNAL_AT_HOME);
-          autom_cntrl.th->state++;
+          case SIGNAL_EVENT_SENDING:
+            signal.sm_millis = millis() + 5000;
+            signal.sm->state = SIGNAL_STATE_SENDING;
+            break;
+          case SIGNAL_EVENT_LEAVE:
+            signal.sm_millis = millis() + 30000;
+            signal.sm->state = SIGNAL_STATE_COUNTDOWN;
+            break;          
+          case SIGNAL_EVENT_ALERT:
+            signal.relay_prog = RELAY_PROG_WARNING ;
+            signal.sm->state = SIGNAL_STATE_WARNING;
+            break;
+        }        
+        break;
+
+      case SIGNAL_STATE_COUNTDOWN:  // Countdown
+        if (signal.event == SIGNAL_EVENT_TIMEOUT) 
+        {
+          signal.sm->state = SIGNAL_STATE_AWAY;
+        }         
+        break;
+      case SIGNAL_STATE_AWAY:
+        switch(signal.event)
+        {
+          case SIGNAL_EVENT_LOGIN:
+            signal.sm_millis = millis() + 30000;
+            signal.sm->state = SIGNAL_STATE_AT_HOME;
+            break;          
+          case SIGNAL_EVENT_ALERT:
+            signal.sm->state = SIGNAL_STATE_ALARM;
+            signal.relay_prog = RELAY_PROG_ALARM;
+            break;
+        }
+      case SIGNAL_STATE_ALARM:
+        switch(signal.event)
+        {
+          case SIGNAL_EVENT_CONFIRM:
+            signal.sm->state = SIGNAL_STATE_AWAY;
+            signal.relay_prog = RELAY_PROG_AWAY;
+            break;          
         }
         break;
-      case 2:   // At home state
-        switch(signal)
+      case SIGNAL_STATE_WARNING:
+        switch(signal.event)
         {
-          case SIGNAL_START:
-          case SIGNAL_AT_HOME:
-          case SIGNAL_COUNTDOWN:
-          case SIGNAL_AWAY:
-            rprog = RELAY_PROG_AWAY ;
-            break;
-          case SIGNAL_ALARM:
-            rprog = RELAY_PROG_ALARM ;
-            break;
-          case SIGNAL_SENDING:
-            rprog = RELAY_PROG_UNDEF ;
-            break;
-          case SIGNAL_NBR_OF:
-            rprog = RELAY_PROG_UNDEF ;
-            break;
+          case SIGNAL_EVENT_CONFIRM:
+          case SIGNAL_EVENT_TIMEOUT:
+            signal.sm->state = SIGNAL_STATE_AWAY;
+            signal.relay_prog = RELAY_PROG_AWAY;
+            break;          
         }
-        
-        //autom_cntrl.th->state++;
         break;
-      case 3:
-        autom_cntrl.th->state++;
-        break;
-      case 4:
-        autom_cntrl.th->state++;
-        break;
-      case 5:
-        autom_cntrl.th->state++;
-        break;
-      case 6:
-        autom_cntrl.th->state++;
-        break;
-      case 7:
-        autom_cntrl.th->state++;
-        break;
-      case 8:
-        autom_cntrl.th->state++;
-        break;
-      case 9:
-        autom_cntrl.th->state++;
-        break;
-      case 10:
-        autom_cntrl.th->state++;
+
+      case SIGNAL_STATE_SENDING:
+        if (signal.event == SIGNAL_EVENT_TIMEOUT) 
+        {
+          signal.sm->state = SIGNAL_STATE_AT_HOME;
+        }         
         break;
     }
+    signal.event = SIGNAL_EVENT_UNDEFINED;
+    prev_state = signal.sm->state;
+    prev_event = signal.event;
 
 }
