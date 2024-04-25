@@ -48,6 +48,7 @@ https://arduino-pico.readthedocs.io/en/latest/serial.html
 #define PIN_I2C_SDA     (8u)
 
 #define LCD_I2C_ADDR    (0x27)
+#define EDOG_I2C_ADDR   (13)
 
 #include "Arduino.h"
 #include <Wire.h>
@@ -62,6 +63,8 @@ https://arduino-pico.readthedocs.io/en/latest/serial.html
 // #include "clock24.h"
 #include "menu4x2.h"
 #include "autom.h"
+#include "edog.h"
+
   
 
 //extern task_st *task[TASK_NBR_OF];
@@ -113,9 +116,9 @@ void setup() {
     Serial.println(": LCD found.");
     show = 0;
     lcd.begin(20, 4);  // initialize the lcd
-
-
-  } else {
+  } 
+  else 
+  {
     Serial.println(": LCD not found.");
   }  // if
 
@@ -137,11 +140,33 @@ void setup() {
 
   autom_initialize(6, 37);
   autom_randomize();
-  
+
+  edog_initialize(EDOG_I2C_ADDR);
+  edog_set_wd_timeout(1000);
+  // edog_test_eeprom_write_read();
+  delay(5);
+    
 }
 
 void loop() {
-  task_run();    
+  // Serial.println("Set WD");
+  // delay(6000);
+  // Serial.println("Clear WD");
+  edog_clear_watchdog();
+  // delay(2000);
+  // edog_set_sleep_time(4000);
+  // edog_switch_off();
+  // Serial.println("switch off");
+  delay(500);
+  
+  // edog_switch_off_1(1);
+  // edog_ext_reset(0);
+  // delay(1000);
+  // edog_switch_off_1(0);
+  // edog_ext_reset(1);
+  // delay(3000);
+  Serial.println("...delay");
+  //task_run();    
 }
 
 
