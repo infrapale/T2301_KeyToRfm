@@ -64,11 +64,15 @@ https://arduino-pico.readthedocs.io/en/latest/serial.html
 #include "menu4x2.h"
 #include "autom.h"
 #include "edog.h"
+#include "helper.h"
+#include "supervisor.h"
 
   
 
 //extern task_st *task[TASK_NBR_OF];
 main_ctrl_st main_ctrl = {0x00};
+
+main_eeprom_data_st main_eeprom_data;
 
 void debug_print_task(void);
 
@@ -79,6 +83,7 @@ task_st menu_timeout_task_handle  = {"Menu Timeout   ", 1000, 0, 0, 255, menu4x2
 task_st signal_task_handle        = {"Signal fast    ", 100, 0, 0, 255, signal_update};
 task_st signal_state_task_handle  = {"Signal state   ", 1000, 0, 0, 255, signal_state_machine};
 task_st autom_task_handle         = {"Automation     ", 1000,0, 0, 255, autom_task};
+task_st supervisor_task_handle    = {"Supervisor     ", 100,0, 0, 255, supervisor_task};
 task_st debug_print_handle        = {"Debug Print    ", 2000,0, 0, 255, debug_print_task};
 
 int show = -1;
@@ -132,41 +137,29 @@ void setup() {
   task_set_task(TASK_SIGNAL, &signal_task_handle);
   task_set_task(TASK_SIGNAL_STATE,&signal_state_task_handle);
   task_set_task(TASK_AUTOM, &autom_task_handle);
+  task_set_task(TASK_SUPERVISOR, &supervisor_task_handle);
   task_set_task(TASK_DEBUG, &debug_print_handle);
   kbd_uart_initialize();
   //clock24_initialize();
   menu4x2_initialize();
   signal_initialize();
+  supervisor_initialize();
 
   autom_initialize(6, 37);
   autom_randomize();
 
   edog_initialize(EDOG_I2C_ADDR);
-  edog_set_wd_timeout(1000);
+
+  helper_initialize_data();
   // edog_test_eeprom_write_read();
   delay(5);
     
 }
 
 void loop() {
-  // Serial.println("Set WD");
-  // delay(6000);
-  // Serial.println("Clear WD");
-  edog_clear_watchdog();
-  // delay(2000);
-  // edog_set_sleep_time(4000);
-  // edog_switch_off();
-  // Serial.println("switch off");
-  delay(500);
+  //edog_clear_watchdog();
   
-  // edog_switch_off_1(1);
-  // edog_ext_reset(0);
-  // delay(1000);
-  // edog_switch_off_1(0);
-  // edog_ext_reset(1);
-  // delay(3000);
-  Serial.println("...delay");
-  //task_run();    
+  task_run();    
 }
 
 

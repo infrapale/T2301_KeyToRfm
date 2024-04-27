@@ -104,6 +104,11 @@ void autom_set_program(relay_prog_et  program)
     autom_cntrl.program = program;
 }
 
+uint8_t autom_get_program(void)
+{
+    return (uint8_t)autom_cntrl.program;
+}
+
 void autom_randomize(void)
 {
     uint16_t hm = (uint16_t)main_ctrl.time.hour * MINUTES_PER_HOUR + (uint16_t)main_ctrl.time.minute;
@@ -218,7 +223,7 @@ void autom_task()
         case 1:  // Set  Mode
             if (sema_reserve( SEMA_SERIAL2))
             {
-                SerialClock.printf("<C1MS:%d>\r\n", (uint8_t)signal_get_state());
+                SerialClock.printf("<C1MS:%d>\r\n", signal_get_state_index());
                 autom_cntrl.th->state++;
                 sema_release( SEMA_SERIAL2);
             }

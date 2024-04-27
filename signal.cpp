@@ -62,7 +62,7 @@ signal_seq signal_pattern[SIGNAL_INDEX_NBR_OF] =
   [SIGNAL_INDEX_SENDING]    = {{RGB_INDX_CYAN , 2},   {RGB_INDX_BLACK, 2},  {RGB_INDX_BLACK, 0}},
 };
 
-char state_label[SIGNAL_INDEX_NBR_OF][20] =
+char state_label[SIGNAL_INDEX_NBR_OF][10] =
 {
 // 0123456789  
   "Start    ",
@@ -83,9 +83,6 @@ void signal_initialize(void)
     
     signal.one_pix_state = 0;
     signal.event = SIGNAL_EVENT_UNDEFINED;
-    //signal.state = SIGNAL_STATE_START;
-    //signal.prev_state = SIGNAL_STATE_START;
-    //signal.state_request = SIGNAL_START;
     signal.sm = task_get_task(TASK_SIGNAL_STATE);
     signal.sm->state = 0;
     signal.seq_indx = 0;
@@ -99,17 +96,6 @@ void signal_initialize(void)
     one_pix.show(); // Initialize all pixels to 'off'
 }
 
-/*
-  SIGNAL_EVENT_UNDEFINED = 0,
-  SIGNAL_EVENT_LOGIN,
-  SIGNAL_EVENT_LOGOUT,
-  SIGNAL_EVENT_LEAVE,
-  SIGNAL_EVENT_ALERT,
-  SIGNAL_EVENT_CONFIRM,
-  SIGNAL_EVENT_SENDING,
-  SIGNAL_EVENT_TIMEOUT,
-  SIGNAL_EVENT_NBR_OF
-*/
 
 void signal_set_event(signal_event_et signal_event)
 {
@@ -118,40 +104,31 @@ void signal_set_event(signal_event_et signal_event)
 }
 
 
-
-void xxsignal_set_state(signal_state_et new_state)
+uint16_t signal_get_state(void)
 {
-    //signal.prev_state = signal.state;
-    //signal.state = new_state;
-
-    // relay_prog_et rprog = signal_to_relay_program(signal.state);
-    // autom_set_program(rprog);
+   return ((uint16_t)signal.sm->state);
 }
 
-uint8_t signal_get_state(void)
+uint8_t signal_get_state_index(void)
 {
    return ((uint8_t)signal.sm->state >> 4);
 }
 
-char *signal_get_state_label(void)
+void signal_set_state(uint16_t new_state)
 {
-   return state_label[signal.sm->state >> 4];
+  signal.sm->state = new_state;
 }
 
-
-
-void xxsignal_return_state(void)
+char *signal_get_state_label(void)
 {
-    //signal.state = signal.prev_state;
-    //relay_prog_et rprog = signal_to_relay_program(signal.state);
-    //autom_set_program(rprog);
+   uint8_t indx = (signal.sm->state >> 4) & 0x0F;
+   return state_label[indx];
 }
 
 
 void signal_update(void)
 {
     uint8_t ind_indx = signal.sm->state >> 4;
-    //Serial.printf("state = %d indx= %d\n\r", signal.sm->state, ind_indx );
     if(++signal.seq_cntr > signal_pattern[ind_indx][signal.seq_indx].duration)
     {
         if(++signal.seq_indx >= NBR_COLOR_SEQ) signal.seq_indx = 0;
@@ -168,14 +145,6 @@ void signal_update(void)
 
 
 }
-
-  // SIGNAL_STATE_START     = 0,
-  // SIGNAL_STATE_AT_HOME   = 10,
-  // SIGNAL_STATE_COUNTDOWN = 20,
-  // SIGNAL_STATE_AWAY      = 30,
-  // SIGNAL_STATE_WARNING   = 40,
-  // SIGNAL_STATE_ALARM     = 50,
-  // SIGNAL_STATE_SENDING   = 60,
 
 
 void signal_state_machine(void)

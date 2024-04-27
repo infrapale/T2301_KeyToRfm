@@ -16,6 +16,8 @@ void autom_initialize(uint8_t hour, uint8_t minute);
 
 void autom_set_program(relay_prog_et  program);
 
+uint8_t autom_get_program(void);
+
 void autom_randomize(void);
 
 void autom_task();

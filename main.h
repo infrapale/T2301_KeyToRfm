@@ -19,6 +19,7 @@ typedef enum {
   TASK_SIGNAL,
   TASK_SIGNAL_STATE,
   TASK_AUTOM,
+  TASK_SUPERVISOR,
   TASK_DEBUG,
   TASK_NBR_OF
 } tasks_et;
@@ -47,4 +48,10 @@ typedef struct
   uint16_t light;
 } main_ctrl_st;
 
+typedef struct
+{
+  uint16_t main_state;
+  uint16_t restart_cntr;
+
+} main_eeprom_data_st;
 #endif

@@ -3,6 +3,8 @@
 #include <LiquidCrystal_PCF8574.h>
 #include "menu4x2.h"
 #include "signal.h"
+#include "autom.h"
+#include "supervisor.h"
 
 #define TIMEOUT_MENU         10000
 #define TIMEOUT_BACK_LIGHT   30000
@@ -94,7 +96,7 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
     { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
     { "Valitse   ", MENU_CAT_ACTIVE    , MENU_OPTION, dummy_menu},
     { "          ", MENU_CAT_TITLE     , MENU_MAIN, dummy_menu},
-    { "          ", MENU_CAT_SHOW_TIME , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_SENSOR    , MENU_MAIN, dummy_menu},
     { "          ", MENU_CAT_STATE     , MENU_MAIN, dummy_menu},
     { "Test      ", MENU_CAT_ACTIVE    , MENU_TEST, dummy_menu}
   },
@@ -115,7 +117,7 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
     { "Min + 10  ", MENU_CAT_ACTIVE    , MENU_SET_TIME, minute_plus_10},
     { "Min + 1   ", MENU_CAT_ACTIVE    , MENU_SET_TIME, minute_plus_1},
     { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
-    { "          ", MENU_CAT_SHOW_TIME , MENU_SET_TIME, dummy_menu},
+    { "          ", MENU_CAT_SENSOR    , MENU_SET_TIME, dummy_menu},
     { "Tunti+1   ", MENU_CAT_ACTIVE    , MENU_SET_TIME, hour_plus},
     { "Tunti-1   ", MENU_CAT_ACTIVE    , MENU_SET_TIME, hour_minus},
     { "Hyvaksy   ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
@@ -163,7 +165,7 @@ void menu4x2_initialize(void)
 
 void menu4x2_show(uint8_t mindx)
 {
-    char line0[21];
+    char line0[40];
     //lcd.setBacklight(1);
     lcd.home();
     lcd.clear();
@@ -179,22 +181,23 @@ void menu4x2_show(uint8_t mindx)
           lcd.setCursor(menu4x2_def[i].col, menu4x2_def[i].row);
           lcd.print(menu4x2[mindx][i].label);
           break;  
-        case MENU_CAT_SHOW_TIME:
+        case MENU_CAT_SENSOR:
           lcd.setCursor(menu4x2_def[i].col, menu4x2_def[i].row);
-          //lcd.setCursor(0,0);
-          sprintf(line0, "%02d:%02d", main_ctrl.time.hour, main_ctrl.time.minute);
+          sprintf(line0, "LDR: %4d PIR: %1d", supervisor_get_ldr(), supervisor_get_pir());
           lcd.print (line0);
           Serial.println(line0);
           break;
         case MENU_CAT_TITLE:
           lcd.setCursor(menu4x2_def[i].col, menu4x2_def[i].row);
-          sprintf(line0, "Villa Astrid");
+          sprintf(line0, "Villa Astrid  %02d:%02d",main_ctrl.time.hour, main_ctrl.time.minute);
           lcd.print (line0);
           Serial.println(line0);
           break;
         case MENU_CAT_STATE:
           lcd.setCursor(menu4x2_def[i].col, menu4x2_def[i].row);
-          sprintf(line0, "%s", signal_get_state_label());
+          sprintf(line0, "%s %02X %d", signal_get_state_label(), signal_get_state(), autom_get_program());
+          //sprintf(line0, "%s %02X %d", "abc", signal_get_state(), autom_get_program());
+          //sprintf(line0, "%02X %d", signal_get_state(), autom_get_program());
           lcd.print (line0);
           Serial.println(line0);
           break;

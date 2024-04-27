@@ -42,6 +42,9 @@ typedef enum
   REG_ADDR_EXT_RESET        = 0x0F,
   REG_ADDR_EEPROM_READ      = 0x10,
   REG_ADDR_EEPROM_WRITE     = 0x20,
+  
+  EEPROM_ADDR_APP_DATA      = 0x0000,
+
   REG_ADDR_3 = 0x03,
   REG_ADDR_4 = 0x04,
   REG_ADDR_5 = 0x05,
@@ -60,6 +63,18 @@ typedef enum
 } eeprom_status_et;
 
 void edog_initialize(uint8_t i2c_addr);
+
+uint32_t edog_get_rx_buff_uint32(uint16_t offs);
+
+uint16_t edog_get_rx_buff_uint16(uint16_t offs);
+
+uint8_t edog_get_rx_buff_uint8(uint16_t offs);
+
+void edog_put_tx_buff_uint32( uint16_t offs, uint32_t u32);
+
+void edog_put_tx_buff_uint16( uint16_t offs, uint16_t u16);
+
+void edog_put_tx_buff_uint8( uint16_t offs, uint8_t u8);
 
 void edog_test_eeprom_write_read(void);
 
@@ -92,5 +107,8 @@ void edog_save_eeprom(void);
 void edog_read_eeprom(uint16_t addr);
 
 void edog_write_eeprom(uint16_t addr, uint8_t *arr);
+
+void edog_write_eeprom_buff(uint16_t addr);
+
 
 #endif

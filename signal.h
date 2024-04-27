@@ -79,7 +79,11 @@ void signal_set_event(signal_event_et signal_event);
 
 //void signal_set_state(signal_state_et new_state);
 
-uint8_t signal_get_state(void);
+uint16_t signal_get_state(void);
+
+void signal_set_state(uint16_t new_state);
+
+uint8_t signal_get_state_index(void);
 
 char *signal_get_state_label(void);
 
