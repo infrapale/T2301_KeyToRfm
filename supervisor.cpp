@@ -10,6 +10,7 @@ typedef struct
   task_st  *sm; 
 } supervisor_st;
 
+
 supervisor_st super;
 
 void supervisor_initialize(void)
@@ -35,29 +36,40 @@ uint16_t supervisor_get_ldr(void)
 void supervisor_task(void)
 {
   static uint16_t  wd_cntr = 10;
-
-  if (wd_cntr > 0 )
-  {
-    wd_cntr--;
-  }
-  else 
-  {
-    wd_cntr = 10;
-    edog_clear_watchdog();
-  }
+  uint8_t tindx;
+  
+  // if (wd_cntr > 0 )
+  // {
+  //   wd_cntr--;
+  // }
+  // else 
+  // {
+  //   wd_cntr = 10;
+  //   edog_clear_watchdog();
+  // }
 
   switch(super.sm->state)
   {
     case 0:
       super.ldr_val = analogRead(PIN_LDR);
-      super.sm->state++;
-      break;
-    case 1:
       super.pir_val = digitalRead(PIN_PIR);
       super.sm->state++;
       break;
-    case 2:
-      super.sm->state++;
+    case 1:
+      super.sm->state = 0;
+      tindx = task_check_all();
+      if (tindx < TASK_NBR_OF) 
+      {
+        task_st  *tptr = task_get_task(tindx);
+        Serial.printf("!!! Task counter overflow: %s %d\n", tptr->name, tptr->cntr);
+        task_print_status(true);
+        Serial.printf("!!! Waiting for Watchdog Reset");
+        super.sm->state = 100;
+      } 
+      else 
+      {
+        edog_clear_watchdog();
+      }
       break;
     case 3:
       super.sm->state++;
@@ -73,6 +85,9 @@ void supervisor_task(void)
       break;
     case 7:
       super.sm->state++;
+      break;
+    case 100:
+      // super.sm->state++;
       break;
     default:
       super.sm->state = 0;

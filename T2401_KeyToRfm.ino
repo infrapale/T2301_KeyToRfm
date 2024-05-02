@@ -44,8 +44,6 @@ https://arduino-pico.readthedocs.io/en/latest/serial.html
 #define PIN_SERIAL_2_TX (4u)
 #define PIN_SERIAL_2_RX (5u)
 
-#define PIN_I2C_SCL     (9u)  
-#define PIN_I2C_SDA     (8u)
 
 #define LCD_I2C_ADDR    (0x27)
 #define EDOG_I2C_ADDR   (13)
@@ -77,14 +75,14 @@ main_eeprom_data_st main_eeprom_data;
 void debug_print_task(void);
 
 //                              name             ms next state prevcb
-task_st read_key_task_handle      = {"Read Key       ", 100,0, 0, 255, run_read_key_commands };
-task_st send_key_task_handle      = {"Send Key       ", 10, 0, 0, 255, run_send_key_commands };
-task_st menu_timeout_task_handle  = {"Menu Timeout   ", 1000, 0, 0, 255, menu4x2_timeout_task };
-task_st signal_task_handle        = {"Signal fast    ", 100, 0, 0, 255, signal_update};
-task_st signal_state_task_handle  = {"Signal state   ", 1000, 0, 0, 255, signal_state_machine};
-task_st autom_task_handle         = {"Automation     ", 1000,0, 0, 255, autom_task};
-task_st supervisor_task_handle    = {"Supervisor     ", 100,0, 0, 255, supervisor_task};
-task_st debug_print_handle        = {"Debug Print    ", 2000,0, 0, 255, debug_print_task};
+task_st read_key_task_handle      = {"Read Key       ", 100,0, 0, 255, 0, 100, run_read_key_commands };
+task_st send_key_task_handle      = {"Send Key       ", 10, 0, 0, 255, 0, 0, run_send_key_commands };
+task_st menu_timeout_task_handle  = {"Menu Timeout   ", 1000, 0, 0, 255, 0, 0, menu4x2_timeout_task };
+task_st signal_task_handle        = {"Signal fast    ", 100, 0, 0, 255, 0, 0, signal_update};
+task_st signal_state_task_handle  = {"Signal state   ", 1000, 0, 0, 255, 0, 0, signal_state_machine};
+task_st autom_task_handle         = {"Automation     ", 1000,0, 0, 255, 0, 0, autom_task};
+task_st supervisor_task_handle    = {"Supervisor     ", 1000,0, 0, 255, 0, 0, supervisor_task};
+task_st debug_print_handle        = {"Debug Print    ", 2000,0, 0, 255, 0, 0, debug_print_task};
 
 int show = -1;
 LiquidCrystal_PCF8574 lcd(0x27);  // set the LCD address to 0x27 for a 16 chars and 2 line display
@@ -109,9 +107,20 @@ void setup() {
   Serial.println(APP_NAME);
   Serial.println(__DATE__); Serial.println(__TIME__);
   
+  pinMode(PIN_PWR_0, OUTPUT);
+  pinMode(PIN_PWR_1, OUTPUT);
+  digitalWrite(PIN_PWR_0, LOW);
+  digitalWrite(PIN_PWR_1, LOW);
+
   Wire.setSCL(PIN_I2C_SCL);
   Wire.setSDA(PIN_I2C_SDA);
   Wire.begin();
+
+  edog_initialize(EDOG_I2C_ADDR);
+  helper_initialize_data();
+  edog_test_eeprom_write_read();
+  //while(true) delay(5);
+
   Wire.beginTransmission(LCD_I2C_ADDR);
   error = Wire.endTransmission();
   Serial.print("Error: ");
@@ -126,6 +135,9 @@ void setup() {
   {
     Serial.println(": LCD not found.");
   }  // if
+
+
+
 
   analogReadResolution(12);
   pinMode(PIN_PIR, INPUT);
@@ -148,11 +160,6 @@ void setup() {
   autom_initialize(6, 37);
   autom_randomize();
 
-  edog_initialize(EDOG_I2C_ADDR);
-
-  helper_initialize_data();
-  // edog_test_eeprom_write_read();
-  delay(5);
     
 }
 

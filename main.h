@@ -12,6 +12,16 @@
 #define PIN_PIR       15
 #define PIN_LDR       26
 
+
+#define PIN_PWR_0       (3u)  
+#define PIN_PWR_1       (2u)  
+#define PIN_I2C_SCL     (5u)  
+#define PIN_I2C_SDA     (4u)
+// #define PIN_I2C_SCL     (9u)  
+// #define PIN_I2C_SDA     (8u)
+
+
+
 typedef enum {
   TASK_READ_KEY = 0,
   TASK_SEND_RFM,

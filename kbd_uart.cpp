@@ -143,6 +143,7 @@ void run_read_key_commands(void)
   {
       kbd_uart_parse_rx();
   }
+  // task_clear_cntr(TASK_READ_KEY);
 }
 
 

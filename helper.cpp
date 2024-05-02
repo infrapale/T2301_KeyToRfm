@@ -29,7 +29,8 @@ void helper_load_main_eeprom(void)
 void helper_initialize_data(void)
 {
   bool incorrect_data = false;
-  edog_set_wd_timeout(2000);
+  edog_set_wd_timeout(4000);
+  delay(5);
 
   helper_load_main_eeprom();
   Serial.printf("State = %02X Restarts = %d\n\r",main_eeprom_data.main_state, main_eeprom_data.restart_cntr);
@@ -49,5 +50,6 @@ void helper_initialize_data(void)
   {
     Serial.printf("Fixed data: State = %02X Restarts = %d\n\r",main_eeprom_data.main_state, main_eeprom_data.restart_cntr);
   }
+  delay(10);
   helper_save_main_eeprom();
 }
