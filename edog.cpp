@@ -264,7 +264,7 @@ void edog_write_eeprom(uint16_t addr, uint8_t *arr)
   edog_send_i2c();
   delay(10);
 
-  edog_build_uint_msg(REG_ADDR_EEPROM_SAVE, 0, 0, 0);
+  edog_build_uint_msg(REG_ADDR_EEPROM_SAVE, 0, 1, 0);
   edog_send_i2c();
 
   edog_print_hex_array(i2c.tx_buff,8);
@@ -285,9 +285,9 @@ void edog_write_eeprom_buff(uint16_t addr)
   edog_send_i2c();
   delay(1);
 
-  edog_build_uint_msg(REG_ADDR_EEPROM_SAVE, 0, 0, 0);
+  edog_build_uint_msg(REG_ADDR_EEPROM_SAVE, 0, 1, 0);
   edog_send_i2c();
-
+  delay(10);
   edog_print_hex_array(i2c.tx_buff,8);
 }
 
@@ -297,6 +297,7 @@ void edog_test_eeprom_write_read(void)
   edog_build_test_data();
   edog_write_eeprom(0x0010, tarr1);
   delay(20);
-  edog_read_eeprom(0x0180);
+  edog_read_eeprom(0x0010);
+  delay(20);
 }
 
