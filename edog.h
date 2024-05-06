@@ -110,5 +110,9 @@ void edog_write_eeprom(uint16_t addr, uint8_t *arr);
 
 void edog_write_eeprom_buff(uint16_t addr);
 
+void edog_print_rx_buff(void);
+
+void edog_print_tx_buff(void);
+
 
 #endif

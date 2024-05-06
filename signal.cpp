@@ -12,8 +12,6 @@
 typedef struct
 {
   signal_event_et event;
-  //signal_state_et state;
-  //signal_state_et prev_state;
   signal_state_et state_request;
   task_st  *sm;
   relay_prog_et relay_prog;
@@ -106,7 +104,7 @@ void signal_set_event(signal_event_et signal_event)
 
 uint16_t signal_get_state(void)
 {
-   return ((uint16_t)signal.sm->state);
+   return (signal.sm->state);
 }
 
 uint8_t signal_get_state_index(void)

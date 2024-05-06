@@ -38,15 +38,6 @@ void supervisor_task(void)
   static uint16_t  wd_cntr = 10;
   uint8_t tindx;
   
-  // if (wd_cntr > 0 )
-  // {
-  //   wd_cntr--;
-  // }
-  // else 
-  // {
-  //   wd_cntr = 10;
-  //   edog_clear_watchdog();
-  // }
 
   switch(super.sm->state)
   {
@@ -54,6 +45,16 @@ void supervisor_task(void)
       super.ldr_val = analogRead(PIN_LDR);
       super.pir_val = digitalRead(PIN_PIR);
       super.sm->state++;
+       edog_clear_watchdog();
+      if (wd_cntr > 0 )
+      {
+        wd_cntr--;
+      }
+      else 
+      {
+        wd_cntr = 10;
+        edog_clear_watchdog();
+      }
       break;
     case 1:
       super.sm->state = 0;
@@ -61,9 +62,9 @@ void supervisor_task(void)
       if (tindx < TASK_NBR_OF) 
       {
         task_st  *tptr = task_get_task(tindx);
-        Serial.printf("!!! Task counter overflow: %s %d\n", tptr->name, tptr->cntr);
+        Serial.printf("!!! Task counter overflow: %s %d\n", tptr->name, tptr->wd_cntr);
         task_print_status(true);
-        Serial.printf("!!! Waiting for Watchdog Reset");
+        Serial.printf("!!! Waiting for Watchdog Reset\n\r");
         super.sm->state = 100;
       } 
       else 

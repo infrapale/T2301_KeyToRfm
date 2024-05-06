@@ -1,6 +1,7 @@
 #include "Arduino.h"
 #include <Wire.h>
 #include "edog.h"
+#include "helper.h"
 
 uint8_t tarr1[I2C_TX_BUFF_SIZE];
 uint8_t tarr2[I2C_TX_BUFF_SIZE];
@@ -52,16 +53,6 @@ uint8_t edog_get_rx_buff_uint8(uint16_t offs)
 }
 
 
-void edog_print_hex_array(uint8_t *arr, uint8_t nbr)
-{
-  for (uint8_t i = 0; i< nbr; i++)
-  {
-    if (arr[i] < 0x10) Serial.print(0,HEX);
-    Serial.print(arr[i],HEX); Serial.print(" ");
-  }
-  Serial.println("");
-}
-
 void edog_build_test_data(void)
 {
   for( uint8_t i = 0; i < 8; i++)
@@ -79,32 +70,34 @@ void edog_initialize(uint8_t i2c_addr)
   edog_build_test_data();
 }
 
+void edog_print_rx_buff(void)
+{
+  Serial.print("i2c.rx: ");
+  helper_print_hex_arr(i2c.rx_buff,9);
+}
+
+void edog_print_tx_buff(void)
+{
+  Serial.print("i2c.tx: ");
+  helper_print_hex_arr(i2c.tx_buff,9);
+}
 
 void edog_receive_i2c(void)
 {
   if(i2c.reg_m2s > 0)
   {
-    Serial.print("Send data.."); Serial.flush();
-
     Wire.beginTransmission(i2c.addr); 
     Wire.write( i2c.tx_buff, i2c.reg_m2s + 1)  ;      
     Wire.endTransmission();
-
-    Serial.println("Data sent to ATtiny Device: ");
-    //Serial.println(buffer);
   }  
 }
+
 void edog_send_i2c(void)
 {
   {
-    Serial.printf("Send data: %02X \n",i2c.tx_buff[0] ); 
-
     Wire.beginTransmission(i2c.addr); 
     Wire.write( i2c.tx_buff, i2c.reg_m2s + 1)  ;      
     Wire.endTransmission();
-
-    Serial.println("Data sent to ATtiny Device: ");
-    //Serial.println(buffer);
   }  
 }
 
@@ -122,7 +115,6 @@ void edog_send_receive(void)
   Wire.beginTransmission(i2c.addr); 
   Wire.write( i2c.tx_buff, i2c.reg_m2s + 1)  ;      
   Wire.endTransmission();
-  //Serial.println(buffer);
 
   if(i2c.reg_s2m > 0)
   {
@@ -134,7 +126,6 @@ void edog_send_receive(void)
     { 
       int c = Wire.read();
       i2c.rx_buff[i++] = (uint8_t) c;
-      // Serial.print("Read: ");  Serial.println(c,HEX); 
     }
 
     //Wire.endTransmission();
@@ -168,8 +159,7 @@ void edog_build_array_msg(uint8_t raddr, uint8_t *arr, uint8_t m2s, uint8_t s2m)
   i2c.reg_addr = raddr;
   i2c.reg_m2s = m2s;
   i2c.reg_s2m = s2m;
-  Serial.printf("i2c.reg_addr %02X %02X\n", i2c.reg_addr, i2c.tx_buff[0]);
-  Serial.flush();
+  // Serial.printf("i2c.reg_addr %02X %02X\n", i2c.reg_addr, i2c.tx_buff[0]); Serial.flush();
   i2c.tx_buff[aindx++] = i2c.reg_addr;
   for (uint8_t i = 0; i < m2s; i++)
   {
@@ -180,14 +170,14 @@ void edog_build_array_msg(uint8_t raddr, uint8_t *arr, uint8_t m2s, uint8_t s2m)
 
 void edog_set_wd_timeout(uint32_t wd_timeout)
 {
-  Serial.print("Watchdog timeout = "); Serial.println(wd_timeout);
+  Serial.printf("Watchdog timeout = %d\n\r", wd_timeout);
   edog_build_uint_msg(REG_ADDR_SET_WDT_TIMEOUT, wd_timeout, 4, 0);
   edog_send_receive();
 }
 
 void edog_set_sleep_time(uint32_t sleep_time)
 {
-  Serial.print("Sleep time = "); Serial.println(sleep_time);
+  Serial.printf("Sleep time = %d\n\r",sleep_time);
   edog_build_uint_msg(REG_ADDR_SET_SLEEP_TIME, sleep_time, 4, 0);
   edog_send_receive();
 }
@@ -235,7 +225,7 @@ void edog_save_eeprom(void)
 
 void edog_read_eeprom(uint16_t addr)
 {
-  Serial.print("Read EEPROM @ "); Serial.println(addr,HEX);
+  Serial.printf("Read EEPROM @ %04X\n\r", addr);
   delay(5);
   edog_build_uint_msg(REG_ADDR_EEPROM_ADDR, (uint32_t) addr, 2, 0);
   edog_send_i2c();
@@ -247,13 +237,13 @@ void edog_read_eeprom(uint16_t addr)
 
   edog_build_uint_msg(REG_ADDR_EEPROM_READ, 0, 0, 8);
   // edog_receive_i2c();
-  edog_send_receive();
-  edog_print_hex_array(i2c.rx_buff,8);
+  edog_send_receive();  
+  edog_print_rx_buff();
 }
 
 void edog_write_eeprom(uint16_t addr, uint8_t *arr)
 {
-  Serial.println("Write EEPROM @ "); Serial.println(addr,HEX);
+  Serial.printf("Write EEPROM @ %04X", addr);
 
   edog_build_uint_msg(REG_ADDR_EEPROM_ADDR, (uint32_t) addr, 2, 0);
   delay(5);
@@ -266,20 +256,19 @@ void edog_write_eeprom(uint16_t addr, uint8_t *arr)
 
   edog_build_uint_msg(REG_ADDR_EEPROM_SAVE, 0, 1, 0);
   edog_send_i2c();
-
-  edog_print_hex_array(i2c.tx_buff,8);
+  edog_print_tx_buff();
 }
 
 void edog_write_eeprom_buff(uint16_t addr)
 {
-  Serial.println("Write EEPROM @ "); Serial.println(addr,HEX);
-
+  Serial.printf("Write EEPROM @ %04X", addr);
+ 
   edog_build_uint_msg(REG_ADDR_EEPROM_ADDR, (uint32_t) addr, 2, 0);
   edog_send_i2c();
   
   delay(1);
   i2c.reg_addr = REG_ADDR_EEPROM_WRITE;
-  i2c.reg_m2s = 8;
+  i2c.reg_m2s = 9;
   i2c.reg_s2m = 0;
   i2c.tx_buff[0] = i2c.reg_addr;
   edog_send_i2c();
@@ -288,7 +277,7 @@ void edog_write_eeprom_buff(uint16_t addr)
   edog_build_uint_msg(REG_ADDR_EEPROM_SAVE, 0, 1, 0);
   edog_send_i2c();
   delay(10);
-  edog_print_hex_array(i2c.tx_buff,8);
+  edog_print_tx_buff();
 }
 
 

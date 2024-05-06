@@ -8,12 +8,24 @@ extern main_eeprom_data_st main_eeprom_data;
 
 uint8_t main_eeprom_data_arr[8];
 
+
+void helper_print_hex_arr(uint8_t *arr, uint8_t n)
+{
+    for (uint8_t i = 0; i < n;i++)
+    {
+      Serial.printf("%02X ", arr[i]);
+    }
+    Serial.println();
+}
+
 void helper_save_main_eeprom(void)
 {   
     main_eeprom_data.main_state = signal_get_state();
-    edog_put_tx_buff_uint16( 0, main_eeprom_data.main_state);
-    edog_put_tx_buff_uint16( 2, main_eeprom_data.restart_cntr);
-    edog_put_tx_buff_uint32( 4, 0x89ABCDEF);
+    // Serial.printf("main_eeprom_data.main_state= %d\n",main_eeprom_data.main_state);
+    edog_put_tx_buff_uint16( 1, main_eeprom_data.main_state);
+    edog_put_tx_buff_uint16( 3, main_eeprom_data.restart_cntr);
+    edog_put_tx_buff_uint32( 5, 0x89ABCDEF);
+    edog_print_tx_buff();
     edog_write_eeprom_buff(EEPROM_ADDR_MAIN_DATA);
 }
 
@@ -51,5 +63,8 @@ void helper_initialize_data(void)
     Serial.printf("Fixed data: State = %02X Restarts = %d\n\r",main_eeprom_data.main_state, main_eeprom_data.restart_cntr);
   }
   delay(10);
+  main_eeprom_data.main_state =  SIGNAL_INDEX_COUNTDOWN;
+  signal_set_state(main_eeprom_data.main_state);
+  //Serial.printf("State(3) = %02X Restarts = %d %02X \n\r",main_eeprom_data.main_state, main_eeprom_data.restart_cntr, signal_get_state());
   helper_save_main_eeprom();
 }
