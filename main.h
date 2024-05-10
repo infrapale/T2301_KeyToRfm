@@ -5,6 +5,19 @@
 #define APP_NAME "T2401_KeyToRfm"
 #define RFM_SEND_INTERVAL 2000
 
+// #define COMBO_2403
+
+#define PIN_SERIAL1_TX (0u)
+#define PIN_SERIAL1_RX (1u)
+
+#undef  PIN_SERIAL2_TX 
+#undef  PIN_SERIAL2_RX
+
+#define PIN_SERIAL_2_TX (4u)
+#define PIN_SERIAL_2_RX (5u)
+
+
+
 #define SerialKbd   Serial1
 #define SerialRfm   Serial2
 #define SerialClock Serial2
@@ -12,13 +25,19 @@
 #define PIN_PIR       15
 #define PIN_LDR       26
 
-
+#ifdef  COMBO_2403
 #define PIN_PWR_0       (3u)  
 #define PIN_PWR_1       (2u)  
+#endif
+
+// I2C PIN Definitions
+#ifdef  COMBO_2403
 #define PIN_I2C_SCL     (5u)  
 #define PIN_I2C_SDA     (4u)
-// #define PIN_I2C_SCL     (9u)  
-// #define PIN_I2C_SDA     (8u)
+#else
+#define PIN_I2C_SCL     (9u)  
+#define PIN_I2C_SDA     (8u)
+#endif
 
 
 
@@ -47,8 +66,12 @@ typedef enum {
 
 typedef struct
 {
+  uint16_t year;
+  uint8_t month;
+  uint8_t day;
   uint8_t hour;
   uint8_t minute;
+  uint8_t second;
 } time_st;
 
 

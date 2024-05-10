@@ -11,7 +11,9 @@ typedef enum
   MENU_MAIN = 0,
   MENU_OPTION,
   MENU_SET_TIME,
+  MENU_SET_DATE,
   MENU_HOME,
+  MENU_INFO,
   MENU_TEST,
   MENU_NBR_OF  
 } menu_index_et;
@@ -23,6 +25,7 @@ typedef enum
   MENU_CAT_SENSOR,
   MENU_CAT_TITLE,
   MENU_CAT_STATE,
+  MENU_CAT_DATE_TIME,
 } menu_category_et;
 
 typedef void (*menu_cb)(void);

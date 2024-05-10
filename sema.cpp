@@ -27,3 +27,13 @@ void sema_release(uint8_t sema_indx)
 {
     sema[sema_indx].reserved  = false;
 }
+
+void sema_status_print(void)
+{
+    Serial.print("Sema: ");
+    for (uint8_t i = 0; i < SEMA_NBR_OF; i++)
+    {
+        Serial.print(sema[i].reserved); Serial.print(" - ");
+    }
+    Serial.println();
+}

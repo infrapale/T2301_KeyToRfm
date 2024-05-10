@@ -63,8 +63,5 @@ void helper_initialize_data(void)
     Serial.printf("Fixed data: State = %02X Restarts = %d\n\r",main_eeprom_data.main_state, main_eeprom_data.restart_cntr);
   }
   delay(10);
-  main_eeprom_data.main_state =  SIGNAL_INDEX_COUNTDOWN;
-  signal_set_state(main_eeprom_data.main_state);
-  //Serial.printf("State(3) = %02X Restarts = %d %02X \n\r",main_eeprom_data.main_state, main_eeprom_data.restart_cntr, signal_get_state());
   helper_save_main_eeprom();
 }

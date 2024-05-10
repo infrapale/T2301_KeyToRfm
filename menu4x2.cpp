@@ -51,7 +51,28 @@ void minute_plus_1(void)
 {
     if(++main_ctrl.time.minute > 59) main_ctrl.time.minute -=60;
 }
- 
+
+void month_plus_1(void)
+{
+    if(++main_ctrl.time.month > 12) main_ctrl.time.month = 1;
+}
+
+void month_minus_1(void)
+{
+    if (main_ctrl.time.month > 1) main_ctrl.time.month--;
+    else main_ctrl.time.month = 12;
+}
+void day_plus_1(void)
+{
+    if(++main_ctrl.time.day > 31) main_ctrl.time.day = 1;
+}
+
+void day_minus_1(void)
+{
+    if (main_ctrl.time.day > 1) main_ctrl.time.day--;
+    else main_ctrl.time.day = 31;
+}
+
 
 void send_signal_event_alert(void)
 {
@@ -86,7 +107,6 @@ const menu_def_st menu4x2_def[MENU_TOTAL] =
   {3 ,0},
 };
 
-
 menu4x2_t menu4x2[MENU_NBR_OF] =
 {
   [MENU_MAIN] =
@@ -96,20 +116,20 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
     { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
     { "Valitse   ", MENU_CAT_ACTIVE    , MENU_OPTION, dummy_menu},
     { "          ", MENU_CAT_TITLE     , MENU_MAIN, dummy_menu},
-    { "          ", MENU_CAT_SENSOR    , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_DATE_TIME , MENU_MAIN, dummy_menu},
     { "          ", MENU_CAT_STATE     , MENU_MAIN, dummy_menu},
     { "Test      ", MENU_CAT_ACTIVE    , MENU_TEST, dummy_menu}
   },
   [MENU_OPTION] =
   {
-    { "Set Time  ", MENU_CAT_ACTIVE    , MENU_SET_TIME, dummy_menu},
-    { "Kotona    ", MENU_CAT_ACTIVE    , MENU_MAIN, send_signal_event_login},
+    { "Aika =    ", MENU_CAT_ACTIVE    , MENU_SET_TIME, dummy_menu},
+    { "Kotona??  ", MENU_CAT_ACTIVE    , MENU_HOME, send_signal_event_login},
     { "All Off   ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
     { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
-    { "Kuittaa   ", MENU_CAT_ACTIVE    , MENU_MAIN, send_signal_event_confirm},
-    { "Poissa    ", MENU_CAT_ACTIVE    , MENU_MAIN, send_signal_event_leave},
+    { "Paivam =  ", MENU_CAT_ACTIVE    , MENU_SET_DATE, dummy_menu},
+    { "Info      ", MENU_CAT_ACTIVE    , MENU_INFO, dummy_menu},
     { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu}
+    { "Kuittaa   ", MENU_CAT_EMPTY     , MENU_MAIN, send_signal_event_confirm}
   },
   [MENU_SET_TIME] =
   {
@@ -117,10 +137,21 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
     { "Min + 10  ", MENU_CAT_ACTIVE    , MENU_SET_TIME, minute_plus_10},
     { "Min + 1   ", MENU_CAT_ACTIVE    , MENU_SET_TIME, minute_plus_1},
     { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
-    { "          ", MENU_CAT_SENSOR    , MENU_SET_TIME, dummy_menu},
+    { "          ", MENU_CAT_DATE_TIME , MENU_SET_TIME, dummy_menu},
     { "Tunti+1   ", MENU_CAT_ACTIVE    , MENU_SET_TIME, hour_plus},
     { "Tunti-1   ", MENU_CAT_ACTIVE    , MENU_SET_TIME, hour_minus},
-    { "Hyvaksy   ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "Hyvaksy   ", MENU_CAT_ACTIVE    , MENU_MAIN, autom_set_time},
+  },
+  [MENU_SET_DATE] =
+  {
+    { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "Paiva + 1 ", MENU_CAT_ACTIVE    , MENU_SET_DATE, day_plus_1},
+    { "Paiva - 1 ", MENU_CAT_ACTIVE    , MENU_SET_DATE, day_minus_1},
+    { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_DATE_TIME , MENU_SET_DATE, dummy_menu},
+    { "KK + 1    ", MENU_CAT_ACTIVE    , MENU_SET_DATE, month_plus_1},
+    { "KK - 1    ", MENU_CAT_ACTIVE    , MENU_SET_DATE, month_minus_1},
+    { "Hyvaksy   ", MENU_CAT_ACTIVE    , MENU_OPTION, autom_set_time},
   },
   [MENU_HOME] =
   {
@@ -130,8 +161,19 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
     { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
     { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
     { "Poissa    ", MENU_CAT_ACTIVE    , MENU_MAIN, send_signal_event_leave},
-    { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "Sammuta   ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
     { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu}
+  },
+  [MENU_INFO] =
+  {
+    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
+    { "Valitse   ", MENU_CAT_ACTIVE    , MENU_OPTION, dummy_menu},
+    { "          ", MENU_CAT_DATE_TIME , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_SENSOR    , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_STATE     , MENU_MAIN, dummy_menu},
+    { "Takaisin  ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu}
   },
   [MENU_TEST] =
   {
@@ -189,7 +231,7 @@ void menu4x2_show(uint8_t mindx)
           break;
         case MENU_CAT_TITLE:
           lcd.setCursor(menu4x2_def[i].col, menu4x2_def[i].row);
-          sprintf(line0, "Villa Astrid  %02d:%02d",main_ctrl.time.hour, main_ctrl.time.minute);
+          sprintf(line0, "*** Villa Astrid ***");
           lcd.print (line0);
           Serial.println(line0);
           break;
@@ -201,6 +243,17 @@ void menu4x2_show(uint8_t mindx)
           lcd.print (line0);
           Serial.println(line0);
           break;
+        case MENU_CAT_DATE_TIME:
+          lcd.setCursor(menu4x2_def[i].col, menu4x2_def[i].row);
+          sprintf(line0, "%02d-%02d-%02d %02d:%02d",
+              main_ctrl.time.year,
+              main_ctrl.time.month, 
+              main_ctrl.time.day, 
+              main_ctrl.time.hour, 
+              main_ctrl.time.minute);
+          lcd.print (line0);
+          Serial.println(line0);
+          break;  
       }
     }
 }

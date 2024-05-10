@@ -174,7 +174,6 @@ void signal_state_machine(void)
 
       case SIGNAL_STATE_START + 1:  // Start state
         // TODO read from edog
-        signal.sm->state = SIGNAL_STATE_AT_HOME;
         autom_set_program(RELAY_PROG_UNDEF);
         signal.sm->state = SIGNAL_STATE_AT_HOME;
         break;
@@ -241,6 +240,10 @@ void signal_state_machine(void)
           signal.sm->state = SIGNAL_STATE_AT_HOME;
         }         
         break;
+      default:
+        Serial.printf("!! Incorrect Signal State !!: %02X", signal.sm->state);
+        signal.sm->state = SIGNAL_STATE_START;
+        break; 
     }
     signal.event = SIGNAL_EVENT_UNDEFINED;
     prev_state = signal.sm->state;
