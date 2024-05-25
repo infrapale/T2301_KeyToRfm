@@ -87,6 +87,8 @@ uint8_t signal_get_state_index(void);
 
 char *signal_get_state_label(void);
 
+uint16_t signal_get_cntr(void);
+
 //void signal_return_state(void);
 
 void signal_state_machine(void);

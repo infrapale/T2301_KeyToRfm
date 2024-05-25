@@ -5,7 +5,9 @@
 #include "autom.h"
 #include "signal.h"
 #include "sema.h"
+#include "supervisor.h"
 
+#define MONTHS_PER_YEAR   12
 #define HOURS_PER_DAY     24
 #define MINUTES_PER_HOUR  60
 #define MINUTES_PER_DAY   (HOURS_PER_DAY * MINUTES_PER_HOUR)
@@ -79,6 +81,24 @@ const uint8_t auto_prog[VA_RELAY_NBR_OF][HOURS_PER_DAY]=
 };
 
 
+const uint32_t dark_time[MONTHS_PER_YEAR] =
+{   
+    //                --------222211111111110000000000
+    //                --------321098765432109876543210
+    [JANUARY]    = {0b00000000111111110000000111111111},  
+    [FEBRUARY]   = {0b00000000111111100000000011111111},
+    [MARCH]      = {0b00000000111110000000000001111111},
+    [APRIL]      = {0b00000000111100000000000000111111},
+    [MAY]        = {0b00000000111010101010101010101010},
+    [JUNE]       = {0b00000000110000000000000000000011},
+    [JULY]       = {0b00000000110000000000000000000011},
+    [AUGUST]     = {0b00000000111000000000000000000111},
+    [SEPTEMBER]  = {0b00000000111100000000000000001111},
+    [OCTOBER]    = {0b00000000111110000000000000011111},
+    [NOVEMBER]   = {0b00000000111111000000000000111111},
+    [DECEMBER]   = {0b00000000111111100000000011111111},
+};
+
  autom_relay_st autom_relay[VA_RELAY_NBR_OF];
 
  
@@ -136,22 +156,28 @@ bool autom_on_off(uint8_t rindx)
     uint16_t hm = (uint16_t)main_ctrl.time.hour * MINUTES_PER_HOUR + (uint16_t)main_ctrl.time.minute;
     uint8_t prog_bit  = 0x01 << autom_cntrl.program;
 
-    uint8_t pr = auto_prog[rindx][autom_relay[rindx].hindx];
+    uint8_t  pr = auto_prog[rindx][autom_relay[rindx].hindx];
+    uint32_t dark_bit = dark_time[main_ctrl.time.month-1];
+    bool     is_dark_now = (dark_bit & (1U << autom_relay[rindx].hindx)) != 0;
+
+    Serial.printf("Dark = %08x - %d, ", dark_bit, is_dark_now);    
+    Serial.printf("Relay %d hx %d on\n", rindx, autom_relay[rindx].hindx);    
+
     if (autom_relay[rindx].autom_state != RELAY_AUTOM_STATE_ON)
     {
-        if ((pr & prog_bit) != 0)
+        if (((pr & prog_bit) != 0) && is_dark_now)
         {
             autom_relay[rindx].autom_state = RELAY_AUTOM_STATE_ON;
-            Serial.printf("Relay %d hx %d on\n", rindx, autom_relay[rindx].hindx);
+            Serial.printf(" ON \n");
             state_changed = true;
         }
     } 
     else 
     {
-        if ((pr & prog_bit) == 0)
+        if (((pr & prog_bit) == 0) || !is_dark_now)
         {
             autom_relay[rindx].autom_state = RELAY_AUTOM_STATE_OFF;
-            Serial.printf("Relay %d hx %d off\n", rindx, autom_relay[rindx].hindx);
+            Serial.printf(" OFF \n");
             state_changed = true;
         }
     }
@@ -276,7 +302,8 @@ void autom_task()
               autom_cntrl.th->state++;
             }
             break;
-        case 2:  // Request Time
+        case 2:  // Set Time
+            autom_cntrl.th->state = 10;
             if (autom_cntrl.set_time)
             {
                 if (sema_reserve( SEMA_SERIAL2))
@@ -291,7 +318,9 @@ void autom_task()
                     sema_release( SEMA_SERIAL2);
                 }              
             }
-          case 3:
+            break;
+          case 10:  // Request Time
+            autom_cntrl.th->state = 1;
             if (autom_cntrl.iter_cntr > autom_cntrl.next_get_time)
             {
                 if (sema_reserve( SEMA_SERIAL2))
@@ -302,12 +331,9 @@ void autom_task()
                     sema_release( SEMA_SERIAL2);
                 }
             }
-            else 
-            {
-              autom_cntrl.th->state = 1;
-            }            
             break;
         case 20:
+            autom_cntrl.th->state = 20;
             if (SerialClock.available())
             {
                 str = SerialClock.readStringUntil('\n');
@@ -323,12 +349,9 @@ void autom_task()
                         autom_cntrl.last_time.minute = main_ctrl.time.minute;
                         autom_cntrl.th->state = 50;
                       }
-                      else
-                      {
-                        autom_cntrl.th->state = 1;
-                      }
                     }
                 }
+                supervisor_clr_cntr(SUPER_ERR_GET_TIME);
             }
             else
             {
@@ -336,7 +359,7 @@ void autom_task()
                 {
                     Serial.println("No get time response -> WD Reset");
                     autom_cntrl.th->wd_cntr = autom_cntrl.th->wd_limit; 
-                    autom_cntrl.th->state = 200;  // wait for reset
+                    autom_cntrl.th->state = 200;  
                 }
             }
             break;
@@ -344,7 +367,7 @@ void autom_task()
             if (autom_cntrl.iter_cntr > autom_cntrl.next_random)
             {
                 autom_randomize();
-                autom_cntrl.next_random = autom_cntrl.iter_cntr + 600;
+                autom_cntrl.next_random = autom_cntrl.iter_cntr + 60;
                 Serial.println("Randomizing");
             }
             autom_cntrl.relay_indx = 0;
@@ -352,6 +375,7 @@ void autom_task()
             break;
         case 51:
             bool changed;
+            Serial.printf("Auto Relay Control: Month: %d Hour: %d\n", main_ctrl.time.month, main_ctrl.time.hour);
             do
             {
               changed = autom_on_off(autom_cntrl.relay_indx);
@@ -376,6 +400,8 @@ void autom_task()
             break;
         case 200:
             Serial.print("#");
+            supervisor_inc_cntr(SUPER_ERR_GET_TIME);
+            autom_cntrl.th->state = 1;  // TODO
             break;
     }
 

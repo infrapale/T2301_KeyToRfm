@@ -7,6 +7,7 @@
 #include "supervisor.h"
 
 #define TIMEOUT_MENU         10000
+#define TIMEOUT_UPDATE       1000
 #define TIMEOUT_BACK_LIGHT   30000
 
 typedef struct
@@ -20,6 +21,7 @@ typedef struct
    uint8_t  level;
    uint32_t bl_timeout_at;
    uint32_t menu_timeout_at;
+   uint32_t menu_update_at;
 } menu4x2_ctrl_st;
 
 extern LiquidCrystal_PCF8574 lcd;
@@ -77,21 +79,25 @@ void day_minus_1(void)
 void send_signal_event_alert(void)
 {
    signal_set_event(SIGNAL_EVENT_ALERT);
+   menu4x2_show_now();
 }
 
 void send_signal_event_leave(void)
 {
    signal_set_event(SIGNAL_EVENT_LEAVE);
+   menu4x2_show_now();
 }
 
 void send_signal_event_login(void)
 {
    signal_set_event(SIGNAL_EVENT_LOGIN);
+   menu4x2_show_now();
 }
 
 void send_signal_event_confirm(void)
 {
    signal_set_event(SIGNAL_EVENT_CONFIRM);
+   menu4x2_show_now();
 }
 
 
@@ -123,7 +129,7 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
   [MENU_OPTION] =
   {
     { "Aika =    ", MENU_CAT_ACTIVE    , MENU_SET_TIME, dummy_menu},
-    { "Kotona??  ", MENU_CAT_ACTIVE    , MENU_HOME, send_signal_event_login},
+    { "Kotona??  ", MENU_CAT_ACTIVE    , MENU_HOME, dummy_menu},
     { "All Off   ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
     { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
     { "Paivam =  ", MENU_CAT_ACTIVE    , MENU_SET_DATE, dummy_menu},
@@ -191,6 +197,7 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
 
 void menu4x2_reset_timeout(void)
 {
+  menu4x2_ctrl.menu_update_at = millis() + TIMEOUT_UPDATE;
   menu4x2_ctrl.menu_timeout_at = millis() + TIMEOUT_MENU;
   menu4x2_ctrl.bl_timeout_at = millis() + TIMEOUT_BACK_LIGHT;
 }
@@ -215,36 +222,32 @@ void menu4x2_show(uint8_t mindx)
 
     for (uint8_t i = 0; i < MENU_TOTAL; i++)
     {
+      lcd.setCursor(menu4x2_def[i].col, menu4x2_def[i].row);
       switch( menu4x2[menu4x2_ctrl.level][i].category )
       {
         case MENU_CAT_EMPTY:
           break;
         case MENU_CAT_ACTIVE:
-          lcd.setCursor(menu4x2_def[i].col, menu4x2_def[i].row);
           lcd.print(menu4x2[mindx][i].label);
           break;  
         case MENU_CAT_SENSOR:
-          lcd.setCursor(menu4x2_def[i].col, menu4x2_def[i].row);
           sprintf(line0, "LDR: %4d PIR: %1d", supervisor_get_ldr(), supervisor_get_pir());
           lcd.print (line0);
-          Serial.println(line0);
+          // Serial.println(line0);
           break;
         case MENU_CAT_TITLE:
-          lcd.setCursor(menu4x2_def[i].col, menu4x2_def[i].row);
           sprintf(line0, "*** Villa Astrid ***");
           lcd.print (line0);
-          Serial.println(line0);
+          // Serial.println(line0);
           break;
         case MENU_CAT_STATE:
-          lcd.setCursor(menu4x2_def[i].col, menu4x2_def[i].row);
-          sprintf(line0, "%s %02X %d", signal_get_state_label(), signal_get_state(), autom_get_program());
+          sprintf(line0, "%s %02X %d", signal_get_state_label(), signal_get_cntr(), autom_get_program());
           //sprintf(line0, "%s %02X %d", "abc", signal_get_state(), autom_get_program());
           //sprintf(line0, "%02X %d", signal_get_state(), autom_get_program());
           lcd.print (line0);
-          Serial.println(line0);
+          // Serial.println(line0);
           break;
         case MENU_CAT_DATE_TIME:
-          lcd.setCursor(menu4x2_def[i].col, menu4x2_def[i].row);
           sprintf(line0, "%02d-%02d-%02d %02d:%02d",
               main_ctrl.time.year,
               main_ctrl.time.month, 
@@ -252,7 +255,7 @@ void menu4x2_show(uint8_t mindx)
               main_ctrl.time.hour, 
               main_ctrl.time.minute);
           lcd.print (line0);
-          Serial.println(line0);
+          // Serial.println(line0);
           break;  
       }
     }
@@ -287,8 +290,19 @@ void menu4x2_key_pressed(char key)
   }
 }
 
+void menu4x2_show_now(void)
+{
+    menu4x2_ctrl.menu_update_at = millis() - 1;
+}
+
 void menu4x2_timeout_task(void)
 {
+    if (menu4x2_ctrl.menu_update_at < millis())
+    {
+      menu4x2_show(menu4x2_ctrl.level);
+      menu4x2_ctrl.menu_update_at = millis() + TIMEOUT_UPDATE;
+    } 
+
     if (menu4x2_ctrl.menu_timeout_at < millis())
     {
       menu4x2_ctrl.level = MENU_MAIN;

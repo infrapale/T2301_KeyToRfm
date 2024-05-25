@@ -2,14 +2,21 @@
 #include "signal.h"
 #include "task.h"
 #include "edog.h"
+#include "supervisor.h"
 
 typedef struct
 {
+  uint16_t err_cntr[SUPER_ERR_NBR_OF];
   uint16_t ldr_val;
   uint8_t pir_val;
   task_st  *sm; 
 } supervisor_st;
 
+uint16_t err_limit[SUPER_ERR_NBR_OF] =
+{
+  [SUPER_ERR_GET_TIME] = 10,
+  [SUPER_ERR_1]        = 1,
+};
 
 supervisor_st super;
 
@@ -18,9 +25,20 @@ void supervisor_initialize(void)
   super.sm = task_get_task(TASK_SUPERVISOR);
   super.sm->state = 0;
   super.ldr_val = 0;
+  for (uint8_t i = 0; i < SUPER_ERR_NBR_OF; i++) super.err_cntr[i] = 0;
 
   pinMode(PIN_LDR, INPUT);
   pinMode(PIN_PIR, INPUT);
+}
+
+void supervisor_inc_cntr(super_err_et cntr_indx)
+{
+  super.err_cntr[cntr_indx]++;
+}
+
+void supervisor_clr_cntr(super_err_et cntr_indx)
+{
+  super.err_cntr[cntr_indx] = 0;
 }
 
 uint8_t supervisor_get_pir(void)
@@ -35,36 +53,44 @@ uint16_t supervisor_get_ldr(void)
 
 void supervisor_task(void)
 {
-  static uint16_t  wd_cntr = 10;
   uint8_t tindx;
+  super_err_et err_cntr_at_limit = SUPER_ERR_NBR_OF;
   
-
   switch(super.sm->state)
   {
     case 0:
       super.ldr_val = analogRead(PIN_LDR);
       super.pir_val = digitalRead(PIN_PIR);
       super.sm->state++;
-       edog_clear_watchdog();
-      if (wd_cntr > 0 )
+      edog_clear_watchdog();
+      for (uint8_t i = 0; i < SUPER_ERR_NBR_OF; i++) 
       {
-        wd_cntr--;
+        if (super.err_cntr[i] >= err_limit[i])
+        {
+          err_cntr_at_limit = (super_err_et)i;
+          break;
+        } 
       }
-      else 
+
+      if (err_cntr_at_limit < SUPER_ERR_NBR_OF)
       {
-        wd_cntr = 10;
+        Serial.printf("Error limit exceeded: index = %d cntr = %d\n", 
+          err_cntr_at_limit, super.err_cntr[err_cntr_at_limit]);
+          super.sm->state = 100;
+      }
+      else
+      {
         edog_clear_watchdog();
       }
       break;
-    case 1:
+    case 10:
       super.sm->state = 0;
       tindx = task_check_all();
       if (tindx < TASK_NBR_OF) 
       {
         task_st  *tptr = task_get_task(tindx);
         Serial.printf("!!! Task counter overflow: %s %d\n", tptr->name, tptr->wd_cntr);
-        task_print_status(true);
-        Serial.printf("!!! Waiting for Watchdog Reset\n\r");
+        task_print_status(true);       
         super.sm->state = 100;
       } 
       else 
@@ -88,7 +114,10 @@ void supervisor_task(void)
       super.sm->state++;
       break;
     case 100:
-      // super.sm->state++;
+      super.sm->state++;
+      Serial.printf("!!! Waiting for Watchdog Reset\n\r");
+      break;
+    case 101:
       break;
     default:
       super.sm->state = 0;

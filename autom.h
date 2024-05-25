@@ -12,6 +12,22 @@ typedef enum
   RELAY_PROG_8        = 0x80,
 } relay_prog_et;
 
+typedef enum
+{
+  JANUARY = 0,
+  FEBRUARY,
+  MARCH,
+  APRIL,
+  MAY,
+  JUNE,
+  JULY,
+  AUGUST,
+  SEPTEMBER,
+  OCTOBER,
+  NOVEMBER,
+  DECEMBER
+} month_et;
+
 void autom_initialize(uint8_t hour, uint8_t minute);
 
 void autom_set_program(relay_prog_et  program);

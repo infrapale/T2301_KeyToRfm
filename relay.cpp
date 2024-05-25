@@ -54,7 +54,8 @@ void relay_send_one(va_relays_et rindx, char value)
     // {"Z":"MH1","S":"RKOK1","V":"T","R":"-"}
     Serial.printf("%s %s %c\n", relay_addr[rindx].unit,relay_addr[rindx].relay, value);
     Serial.printf("<#X1N:%s;%s;%c;->\n", relay_addr[rindx].unit,relay_addr[rindx].relay, value);
-    SerialRfm.printf("<#X1N:%s;%s;%c;->\n", relay_addr[rindx].unit,relay_addr[rindx].relay, value);
+    // SerialRfm.printf("<#X1N:%s;%s;%c;->\n", relay_addr[rindx].unit,relay_addr[rindx].relay, value);
+    SerialRfm.printf("<#X1N:%s;%s;%c;->\n", relay_addr[0].unit,relay_addr[rindx].relay, value);
 }
 
 const relay_addr_st *relay_get_addr_ptr( va_relays_et relay_id)

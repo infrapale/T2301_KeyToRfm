@@ -9,6 +9,10 @@
 
 #define RGB_PIX_PIN     22
 
+
+#define SIGNAL_LEAVE_COUNTDOWN_SEC  30
+#define SIGNAL_LEAVE_COUNTDOWN_MS   (SIGNAL_LEAVE_COUNTDOWN_SEC * 1000)
+
 typedef struct
 {
   signal_event_et event;
@@ -19,6 +23,7 @@ typedef struct
   uint8_t seq_indx;
   uint8_t seq_cntr;
   uint32_t sm_millis;
+  uint16_t cntr;
 } signal_st;
 
 
@@ -85,6 +90,7 @@ void signal_initialize(void)
     signal.sm->state = 0;
     signal.seq_indx = 0;
     signal.seq_cntr = 0;
+    signal.cntr = 0;
     signal.relay_prog = RELAY_PROG_UNDEF;
     color_u32 =  RGB_MAGENTA; 
     one_pix.begin();
@@ -123,6 +129,10 @@ char *signal_get_state_label(void)
    return state_label[indx];
 }
 
+uint16_t signal_get_cntr(void)
+{
+    return signal.cntr;
+}
 
 void signal_update(void)
 {
@@ -186,7 +196,8 @@ void signal_state_machine(void)
             signal.sm->state = SIGNAL_STATE_SENDING;
             break;
           case SIGNAL_EVENT_LEAVE:
-            signal.sm_millis = millis() + 30000;
+            signal.sm_millis = millis() + SIGNAL_LEAVE_COUNTDOWN_MS;
+            signal.cntr = SIGNAL_LEAVE_COUNTDOWN_SEC;
             signal.sm->state = SIGNAL_STATE_COUNTDOWN;
             break;          
           case SIGNAL_EVENT_ALERT:
@@ -197,6 +208,7 @@ void signal_state_machine(void)
         break;
 
       case SIGNAL_STATE_COUNTDOWN:  // Countdown
+        if (signal.cntr > 0) signal.cntr--;
         if (signal.event == SIGNAL_EVENT_TIMEOUT) 
         {
           signal.sm->state = SIGNAL_STATE_AWAY;

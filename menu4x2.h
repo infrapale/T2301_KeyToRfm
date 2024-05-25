@@ -48,6 +48,8 @@ bool menu4x2_key_do_menu(char key);
 
 void menu4x2_key_pressed(char key);
 
+void menu4x2_show_now(void);
+
 void menu4x2_timeout_task(void);
 
 #endif
