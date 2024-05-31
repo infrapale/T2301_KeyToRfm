@@ -37,6 +37,8 @@
 #else
 #define PIN_I2C_SCL     (9u)  
 #define PIN_I2C_SDA     (8u)
+#define PIN_I2C1_SCL    (11u)  
+#define PIN_I2C1_SDA    (10u)
 #endif
 
 

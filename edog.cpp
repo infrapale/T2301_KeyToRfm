@@ -86,18 +86,18 @@ void edog_receive_i2c(void)
 {
   if(i2c.reg_m2s > 0)
   {
-    Wire.beginTransmission(i2c.addr); 
-    Wire.write( i2c.tx_buff, i2c.reg_m2s + 1)  ;      
-    Wire.endTransmission();
+    Wire1.beginTransmission(i2c.addr); 
+    Wire1.write( i2c.tx_buff, i2c.reg_m2s + 1)  ;      
+    Wire1.endTransmission();
   }  
 }
 
 void edog_send_i2c(void)
 {
   {
-    Wire.beginTransmission(i2c.addr); 
-    Wire.write( i2c.tx_buff, i2c.reg_m2s + 1)  ;      
-    Wire.endTransmission();
+    Wire1.beginTransmission(i2c.addr); 
+    Wire1.write( i2c.tx_buff, i2c.reg_m2s + 1)  ;      
+    Wire1.endTransmission();
   }  
 }
 
@@ -112,23 +112,23 @@ void edog_send_receive(void)
   // Serial.println(" ");
   // Serial.flush();
 
-  Wire.beginTransmission(i2c.addr); 
-  Wire.write( i2c.tx_buff, i2c.reg_m2s + 1)  ;      
-  Wire.endTransmission();
+  Wire1.beginTransmission(i2c.addr); 
+  Wire1.write( i2c.tx_buff, i2c.reg_m2s + 1)  ;      
+  Wire1.endTransmission();
 
   if(i2c.reg_s2m > 0)
   {
     // delay(1);
-    //Wire.beginTransmission(i2c.addr); 
-    Wire.requestFrom(i2c.addr, i2c.reg_s2m);   
+    //Wire1.beginTransmission(i2c.addr); 
+    Wire1.requestFrom(i2c.addr, i2c.reg_s2m);   
     uint8_t i = 0; 
-    while(Wire.available())    
+    while(Wire1.available())    
     { 
-      int c = Wire.read();
+      int c = Wire1.read();
       i2c.rx_buff[i++] = (uint8_t) c;
     }
 
-    //Wire.endTransmission();
+    //Wire1.endTransmission();
   }
 }
 

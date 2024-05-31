@@ -14,7 +14,7 @@ typedef struct
 
 uint16_t err_limit[SUPER_ERR_NBR_OF] =
 {
-  [SUPER_ERR_GET_TIME] = 10,
+  [SUPER_ERR_GET_TIME] = 4,
   [SUPER_ERR_1]        = 1,
 };
 
@@ -51,18 +51,28 @@ uint16_t supervisor_get_ldr(void)
   return super.ldr_val;
 }
 
+void supervisor_debug_print(void)
+{
+  Serial.print("Supervisor err_cntr: ");
+    for (uint8_t i = 0; i < SUPER_ERR_NBR_OF; i++) 
+    {
+      Serial.printf("%d ", super.err_cntr[i]);
+    }
+  Serial.println();
+}
+
 void supervisor_task(void)
 {
   uint8_t tindx;
   super_err_et err_cntr_at_limit = SUPER_ERR_NBR_OF;
-  
+  bool clr_edog = false;
+
   switch(super.sm->state)
   {
     case 0:
       super.ldr_val = analogRead(PIN_LDR);
       super.pir_val = digitalRead(PIN_PIR);
-      super.sm->state++;
-      edog_clear_watchdog();
+      super.sm->state = 10;
       for (uint8_t i = 0; i < SUPER_ERR_NBR_OF; i++) 
       {
         if (super.err_cntr[i] >= err_limit[i])
@@ -77,10 +87,11 @@ void supervisor_task(void)
         Serial.printf("Error limit exceeded: index = %d cntr = %d\n", 
           err_cntr_at_limit, super.err_cntr[err_cntr_at_limit]);
           super.sm->state = 100;
+          clr_edog = false;
       }
       else
       {
-        edog_clear_watchdog();
+         clr_edog = true;
       }
       break;
     case 10:
@@ -95,7 +106,7 @@ void supervisor_task(void)
       } 
       else 
       {
-        edog_clear_watchdog();
+        clr_edog = true;
       }
       break;
     case 3:
@@ -124,5 +135,6 @@ void supervisor_task(void)
       break;
 
   }
+  if (clr_edog)  edog_clear_watchdog();
 
 }

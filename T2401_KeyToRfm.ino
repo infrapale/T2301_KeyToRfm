@@ -127,16 +127,21 @@ void setup() {
 
   Wire.setSCL(PIN_I2C_SCL);
   Wire.setSDA(PIN_I2C_SDA);
+  Wire1.setSCL(PIN_I2C1_SCL);
+  Wire1.setSDA(PIN_I2C1_SDA);
+  
   Wire.begin();
+  Wire1.begin();
 
   initialize_tasks();
   signal_initialize();
 
   edog_initialize(EDOG_I2C_ADDR);
+  edog_set_wd_timeout(5000);
   helper_initialize_data();
   
   kbd_uart_initialize();
-  edog_test_eeprom_write_read();
+  // edog_test_eeprom_write_read();
   //while(true) delay(5);
 
   Wire.beginTransmission(LCD_I2C_ADDR);
@@ -176,6 +181,8 @@ void debug_print_task(void)
 {
   task_print_status(true);
   sema_status_print();
+  supervisor_debug_print();
+
   // uint16_t a_ldr = analogRead(PIN_LDR);
   // Serial.println(a_ldr);
   // Serial.print("PIR="); Serial.println(digitalRead(PIN_PIR));

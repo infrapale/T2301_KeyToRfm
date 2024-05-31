@@ -11,6 +11,7 @@
 #define HOURS_PER_DAY     24
 #define MINUTES_PER_HOUR  60
 #define MINUTES_PER_DAY   (HOURS_PER_DAY * MINUTES_PER_HOUR)
+#define NEXT_RANDOM_ITER  600
 
 typedef enum
 {
@@ -355,7 +356,7 @@ void autom_task()
             }
             else
             {
-                if (millis() > autom_cntrl.next_get_time)  
+                if (autom_cntrl.iter_cntr > autom_cntrl.next_get_time)  
                 {
                     Serial.println("No get time response -> WD Reset");
                     autom_cntrl.th->wd_cntr = autom_cntrl.th->wd_limit; 
@@ -367,7 +368,7 @@ void autom_task()
             if (autom_cntrl.iter_cntr > autom_cntrl.next_random)
             {
                 autom_randomize();
-                autom_cntrl.next_random = autom_cntrl.iter_cntr + 60;
+                autom_cntrl.next_random = autom_cntrl.iter_cntr + NEXT_RANDOM_ITER;  // seconds
                 Serial.println("Randomizing");
             }
             autom_cntrl.relay_indx = 0;

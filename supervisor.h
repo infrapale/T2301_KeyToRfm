@@ -15,6 +15,8 @@ void supervisor_inc_cntr(super_err_et cntr_indx);
 
 void supervisor_clr_cntr(super_err_et cntr_indx);
 
+void supervisor_debug_print(void);
+
 void supervisor_task(void);
 
 uint8_t supervisor_get_pir(void);
