@@ -31,7 +31,8 @@ void helper_save_main_eeprom(void)
 
 void helper_load_main_eeprom(void)
 {
-    edog_read_eeprom(EEPROM_ADDR_MAIN_DATA);
+    //edog_read_eeprom(EEPROM_ADDR_MAIN_DATA);
+    edog_read_eeprom(EEPROM_ADDR_WD_INTERVAL);
     main_eeprom_data.main_state = edog_get_rx_buff_uint16(0);
     main_eeprom_data.restart_cntr = edog_get_rx_buff_uint16(2);
     signal_set_state(main_eeprom_data.main_state);
@@ -41,7 +42,7 @@ void helper_load_main_eeprom(void)
 void helper_initialize_data(void)
 {
   bool incorrect_data = false;
-  edog_set_wd_timeout(4000);
+  //edog_set_wd_timeout(4000);
   delay(5);
 
   helper_load_main_eeprom();

@@ -124,18 +124,21 @@ void setup() {
   digitalWrite(PIN_PWR_0, LOW);
   digitalWrite(PIN_PWR_1, LOW);
   #endif
+  
+  pinMode(PIN_WD_RESET,OUTPUT);
+  digitalWrite(PIN_WD_RESET, LOW);
 
   Wire.setSCL(PIN_I2C_SCL);
   Wire.setSDA(PIN_I2C_SDA);
-  Wire1.setSCL(PIN_I2C1_SCL);
-  Wire1.setSDA(PIN_I2C1_SDA);
+  //Wire1.setSCL(PIN_I2C1_SCL);
+  //Wire1.setSDA(PIN_I2C1_SDA);
   
   Wire.begin();
-  Wire1.begin();
+  //Wire1.begin();
 
   initialize_tasks();
   signal_initialize();
-
+  delay(1000);
   edog_initialize(EDOG_I2C_ADDR);
   edog_set_wd_timeout(5000);
   helper_initialize_data();

@@ -39,6 +39,7 @@
 #define PIN_I2C_SDA     (8u)
 #define PIN_I2C1_SCL    (11u)  
 #define PIN_I2C1_SDA    (10u)
+#define PIN_WD_RESET    (13u)
 #endif
 
 

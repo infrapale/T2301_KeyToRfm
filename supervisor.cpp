@@ -8,8 +8,9 @@ typedef struct
 {
   uint16_t err_cntr[SUPER_ERR_NBR_OF];
   uint16_t ldr_val;
-  uint8_t pir_val;
+  uint8_t  pir_val;
   task_st  *sm; 
+  uint8_t  wd_pin_state;
 } supervisor_st;
 
 uint16_t err_limit[SUPER_ERR_NBR_OF] =
@@ -25,6 +26,7 @@ void supervisor_initialize(void)
   super.sm = task_get_task(TASK_SUPERVISOR);
   super.sm->state = 0;
   super.ldr_val = 0;
+  super.wd_pin_state = 0;
   for (uint8_t i = 0; i < SUPER_ERR_NBR_OF; i++) super.err_cntr[i] = 0;
 
   pinMode(PIN_LDR, INPUT);
@@ -66,6 +68,8 @@ void supervisor_task(void)
   uint8_t tindx;
   super_err_et err_cntr_at_limit = SUPER_ERR_NBR_OF;
   bool clr_edog = false;
+
+  // WD DEBUG super.err_cntr[SUPER_ERR_GET_TIME]++;  // DEBUG -REMOVE
 
   switch(super.sm->state)
   {
@@ -135,6 +139,11 @@ void supervisor_task(void)
       break;
 
   }
-  if (clr_edog)  edog_clear_watchdog();
-
+  // if (clr_edog)  edog_clear_watchdog();
+  if (clr_edog ) 
+  {
+    if (super.wd_pin_state == 0) super.wd_pin_state = 1;
+    else super.wd_pin_state = 0;
+    digitalWrite(PIN_WD_RESET,super.wd_pin_state);
+  }
 }
