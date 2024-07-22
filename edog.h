@@ -31,17 +31,19 @@ typedef enum
 
 typedef enum
 {
-  REG_ADDR_SET_WDT_TIMEOUT  = 0x00,
-  REG_ADDR_SET_SLEEP_TIME   = 0x04,
+  REG_ADDR_SET_RD_POS       = 0x00,
   REG_ADDR_CLEAR_WATCHDOG   = 0x08,
   REG_ADDR_SWITCH_OFF       = 0x09,
   REG_ADDR_EEPROM_ADDR      = 0x0A,
   REG_ADDR_EEPROM_LOAD      = 0x0C,
   REG_ADDR_EEPROM_SAVE      = 0x0D,
-  REG_ADDR_SWITCH_OFF_1     = 0x0E,
+  REG_ADDR_POWER_OFF_0      = 0x0E,
   REG_ADDR_EXT_RESET        = 0x0F,
-  REG_ADDR_EEPROM_READ      = 0x10,
-  REG_ADDR_EEPROM_WRITE     = 0x20,
+  REG_ADDR_WD_INTERVAL      = 0x10,
+  REG_ADDR_SLEEP_TIME       = 0x14,
+  REG_ADDR_EEPROM_READ      = 0x20,
+  REG_ADDR_EEPROM_WRITE     = 0x30,
+
   
   EEPROM_ADDR_APP_DATA      = 0x0000,
   EEPROM_ADDR_USER_END      = 0x017F,
@@ -79,6 +81,8 @@ void edog_put_tx_buff_uint16( uint16_t offs, uint16_t u16);
 
 void edog_put_tx_buff_uint8( uint16_t offs, uint8_t u8);
 
+void edog_rd_reg(uint8_t pos, uint8_t len);
+
 void edog_test_eeprom_write_read(void);
 
 void edog_build_uint_msg(uint8_t raddr, uint32_t value, uint8_t m2s, uint8_t s2m);
@@ -87,6 +91,8 @@ void edog_build_uint_msg(uint8_t raddr, uint32_t value, uint8_t m2s, uint8_t s2m
 void edog_build_array_msg(uint8_t raddr, uint8_t *arr, uint8_t m2s, uint8_t s2m);
 
 void edog_build_test_data(void);
+
+void edog_read_i2c(uint8_t bytes);
 
 void edog_test_eeprom_write_read(void);
 

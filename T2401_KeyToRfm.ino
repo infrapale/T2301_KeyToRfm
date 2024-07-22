@@ -140,8 +140,13 @@ void setup() {
   signal_initialize();
   delay(1000);
   edog_initialize(EDOG_I2C_ADDR);
-  edog_set_wd_timeout(5000);
-  helper_initialize_data();
+  //edog_set_wd_timeout(5000);
+  //delay(10);
+  edog_set_sleep_time(2000);
+  edog_rd_reg(REG_ADDR_SLEEP_TIME,4);
+
+  //edog_read_i2c(4);
+  // helper_initialize_data();
   
   kbd_uart_initialize();
   // edog_test_eeprom_write_read();

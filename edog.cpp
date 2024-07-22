@@ -92,6 +92,17 @@ void edog_receive_i2c(void)
   }  
 }
 
+void edog_read_i2c(uint8_t bytes)
+{
+    Wire.requestFrom(i2c.addr, bytes);   
+    uint8_t i = 0; 
+    while(Wire.available())    
+    { 
+      int c = Wire.read();
+      i2c.rx_buff[i++] = (uint8_t) c;
+    }
+}
+
 void edog_send_i2c(void)
 {
   {
@@ -101,16 +112,38 @@ void edog_send_i2c(void)
   }  
 }
 
+void edog_set_read_pos(uint8_t pos)
+{
+  Serial.println("Set read pos");
+  edog_build_uint_msg(REG_ADDR_SET_RD_POS, pos, 1, 0);
+  edog_send_i2c();
+}
+
+void edog_rd_reg(uint8_t pos, uint8_t len)
+{
+  edog_set_read_pos(pos);
+  delay(1);
+  Wire.requestFrom(i2c.addr, len); 
+  Wire.requestFrom(i2c.addr, i2c.reg_s2m);   
+  uint8_t i = 0; 
+  while(Wire.available())    
+  { 
+    int c = Wire.read();
+    i2c.rx_buff[i++] = (uint8_t) c;
+  }
+  edog_print_rx_buff();
+}
+ 
 
 void edog_send_receive(void)
 {
 
-  // Serial.print("send_receive: "); 
+  Serial.print("send_receive: "); 
   // Serial.print(i2c.addr, HEX); 
-  // Serial.print(" reg_m2s="); Serial.print(i2c.reg_m2s);
-  // Serial.print(" reg_s2m="); Serial.print(i2c.reg_s2m);
-  // Serial.println(" ");
-  // Serial.flush();
+  Serial.print(" reg_m2s="); Serial.print(i2c.reg_m2s);
+  Serial.print(" reg_s2m="); Serial.print(i2c.reg_s2m);
+  Serial.println(" ");
+  Serial.flush();
 
   Wire.beginTransmission(i2c.addr); 
   Wire.write( i2c.tx_buff, i2c.reg_m2s + 1)  ;      
@@ -171,14 +204,14 @@ void edog_build_array_msg(uint8_t raddr, uint8_t *arr, uint8_t m2s, uint8_t s2m)
 void edog_set_wd_timeout(uint32_t wd_timeout)
 {
   Serial.printf("Watchdog timeout = %d\n\r", wd_timeout);
-  edog_build_uint_msg(REG_ADDR_SET_WDT_TIMEOUT, wd_timeout, 4, 0);
+  edog_build_uint_msg(REG_ADDR_WD_INTERVAL, wd_timeout, 4, 0);
   edog_send_receive();
 }
 
 void edog_set_sleep_time(uint32_t sleep_time)
 {
   Serial.printf("Sleep time = %d\n\r",sleep_time);
-  edog_build_uint_msg(REG_ADDR_SET_SLEEP_TIME, sleep_time, 4, 0);
+  edog_build_uint_msg(REG_ADDR_SLEEP_TIME, sleep_time, 4, 0);
   edog_send_receive();
 }
 
@@ -192,16 +225,16 @@ void edog_clear_watchdog(void)
 void edog_switch_off(void)
 {
   Serial.println("Goto Sleep");
-  edog_build_uint_msg(REG_ADDR_SWITCH_OFF, 1, 1, 0);
+  edog_build_uint_msg(REG_ADDR_POWER_OFF_0, 1, 1, 0);
   edog_send_receive();
 }
 
-void edog_switch_off_1(uint8_t value)
-{
-  Serial.println("Switch off 1");
-  edog_build_uint_msg(REG_ADDR_SWITCH_OFF_1, value, 1, 0);
-  edog_send_receive();
-}
+// void edog_switch_off_1(uint8_t value)
+// {
+//   Serial.println("Switch off 1");
+//   edog_build_uint_msg(REG_ADDR_SWITCH_OFF_1, value, 1, 0);
+//   edog_send_receive();
+// }
 void edog_ext_reset(uint8_t value)
 {
   Serial.println("External Reset");
