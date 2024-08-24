@@ -1,11 +1,12 @@
 #include "main.h"
 #include "edog.h"
 #include "signal.h"
+#include "eep.h"
 
 #define EEPROM_ADDR_MAIN_DATA  (EEPROM_ADDR_APP_DATA + 0x0000)
 
-extern main_eeprom_data_st main_eeprom_data;
-
+//extern main_eeprom_data_st main_eeprom_data;
+extern main_ctrl_st main_ctrl;
 uint8_t main_eeprom_data_arr[8];
 
 
@@ -19,23 +20,21 @@ void helper_print_hex_arr(uint8_t *arr, uint8_t n)
 }
 
 void helper_save_main_eeprom(void)
-{   
-    main_eeprom_data.main_state = signal_get_state();
-    // Serial.printf("main_eeprom_data.main_state= %d\n",main_eeprom_data.main_state);
-    edog_put_tx_buff_uint16( 1, main_eeprom_data.main_state);
-    edog_put_tx_buff_uint16( 3, main_eeprom_data.restart_cntr);
-    edog_put_tx_buff_uint32( 5, 0x89ABCDEF);
-    edog_print_tx_buff();
-    edog_write_eeprom_buff(EEPROM_ADDR_MAIN_DATA);
+{ 
+    eep_set_addr(EEP_ADDR_MAIN_STATE);
+    eep_write_u16(main_ctrl.state);
+    eep_set_addr(EEP_ADDR_RESTART_CNTR);
+    eep_write_u16(main_ctrl.restart_cntr);
+    eep_commit();
 }
 
 void helper_load_main_eeprom(void)
 {
-    //edog_read_eeprom(EEPROM_ADDR_MAIN_DATA);
-    edog_read_eeprom(EEPROM_ADDR_WD_INTERVAL);
-    main_eeprom_data.main_state = edog_get_rx_buff_uint16(0);
-    main_eeprom_data.restart_cntr = edog_get_rx_buff_uint16(2);
-    signal_set_state(main_eeprom_data.main_state);
+    eep_set_addr(EEP_ADDR_MAIN_STATE);
+    main_ctrl.state = eep_read_u16();
+    eep_set_addr(EEP_ADDR_RESTART_CNTR);
+    main_ctrl.restart_cntr = eep_read_u16();
+    signal_set_state(main_ctrl.state);
 }
 
 
@@ -46,22 +45,22 @@ void helper_initialize_data(void)
   delay(5);
 
   helper_load_main_eeprom();
-  Serial.printf("State = %02X Restarts = %d\n\r",main_eeprom_data.main_state, main_eeprom_data.restart_cntr);
-  if (main_eeprom_data.main_state > SIGNAL_STATE_SENDING) 
+  Serial.printf("State = %02X Restarts = %d\n\r",main_ctrl.state, main_ctrl.restart_cntr);
+  if (main_ctrl.state > SIGNAL_STATE_SENDING) 
   {
-    main_eeprom_data.main_state = SIGNAL_STATE_START;
+    main_ctrl.state = SIGNAL_STATE_START;
     incorrect_data = true;
   }
-  if (main_eeprom_data.restart_cntr > 10000) 
+  if (main_ctrl.restart_cntr > 10000) 
   {
-    main_eeprom_data.restart_cntr = 0;
+    main_ctrl.restart_cntr = 0;
     incorrect_data = true;
   }  
-  main_eeprom_data.restart_cntr++;
-  signal_set_state(main_eeprom_data.main_state);
+  main_ctrl.restart_cntr++;
+  signal_set_state(main_ctrl.state);
   if (incorrect_data)
   {
-    Serial.printf("Fixed data: State = %02X Restarts = %d\n\r",main_eeprom_data.main_state, main_eeprom_data.restart_cntr);
+    Serial.printf("Fixed data: State = %02X Restarts = %d\n\r",main_ctrl.state, main_ctrl.restart_cntr);
   }
   delay(10);
   helper_save_main_eeprom();

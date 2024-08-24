@@ -56,13 +56,13 @@ https://arduino-pico.readthedocs.io/en/latest/serial.html
 #include "edog.h"
 #include "helper.h"
 #include "supervisor.h"
+#include "eep.h"
 
   
 
 //extern task_st *task[TASK_NBR_OF];
 main_ctrl_st main_ctrl = {0x00};
 
-main_eeprom_data_st main_eeprom_data;
 
 void debug_print_task(void);
 
@@ -136,15 +136,16 @@ void setup() {
   
   Wire.begin();
   //Wire1.begin();
-
+  eep_initialize(EEP_SIZE);
   initialize_tasks();
   signal_initialize();
+
   delay(1000);
-  edog_initialize(EDOG_I2C_ADDR);
+  // edog_initialize(EDOG_I2C_ADDR);
   //edog_set_wd_timeout(5000);
   //delay(10);
-  edog_set_sleep_time(2000);
-  edog_rd_reg(REG_ADDR_SLEEP_TIME,4);
+  //edog_set_sleep_time(2000);
+  //edog_rd_reg(REG_ADDR_SLEEP_TIME,4);
 
   //edog_read_i2c(4);
   // helper_initialize_data();

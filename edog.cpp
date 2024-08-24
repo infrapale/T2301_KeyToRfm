@@ -3,6 +3,7 @@
 #include "edog.h"
 #include "helper.h"
 
+/*
 uint8_t tarr1[I2C_TX_BUFF_SIZE];
 uint8_t tarr2[I2C_TX_BUFF_SIZE];
 
@@ -322,4 +323,4 @@ void edog_test_eeprom_write_read(void)
   edog_read_eeprom(0x0010);
   delay(20);
 }
-
+*/

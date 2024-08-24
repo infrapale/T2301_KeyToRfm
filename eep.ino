@@ -19,7 +19,7 @@ void eep_initialize(uint16_t size)
 
 bool eep_set_addr(uint16_t addr)
 {
-  bool is_ok = fasle;
+  bool is_ok = false;
   if (addr < eep.size)
   {
     eep.addr = addr;
@@ -30,10 +30,10 @@ bool eep_set_addr(uint16_t addr)
 
 bool eep_next(void)
 {
-  bool is_ok = fasle;
+  bool is_ok = false;
   if (eep.addr < eep.size)
   {
-    eep_addr++;
+    eep.addr++;
     is_ok = true;
   }
   return is_ok;
@@ -50,7 +50,7 @@ void eep_write_u8(uint8_t u8)
     eep.addr++;
 }
 
-void eep_write_u16(uint16t u16)
+void eep_write_u16(uint16_t u16)
 {
     uint8_t u8;
     u8 = (uint8_t) ((u16 >> 8) & 0xFF);
@@ -68,7 +68,7 @@ uint8_t eep_read_u8(void)
   return (u8);
 }
 
-uint8_t eep_read_u16(void)
+uint16_t eep_read_u16(void)
 {
   uint16_t u16;
   uint8_t u8 = EEPROM.read(eep.addr);
@@ -77,8 +77,6 @@ uint8_t eep_read_u16(void)
   u8 = EEPROM.read(eep.addr);
   u16 |= u8; 
 
-  return (u8);
+  return (u16);
 }
 
-
-value = EEPROM.read(address);

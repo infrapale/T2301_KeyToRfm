@@ -80,14 +80,10 @@ typedef struct
 
 typedef struct
 {
+  uint16_t state;
+  uint16_t restart_cntr;
   time_st time;
   uint16_t light;
 } main_ctrl_st;
 
-typedef struct
-{
-  uint16_t main_state;
-  uint16_t restart_cntr;
-
-} main_eeprom_data_st;
 #endif
