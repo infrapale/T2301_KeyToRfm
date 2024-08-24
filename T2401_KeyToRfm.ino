@@ -97,6 +97,7 @@ void initialize_tasks(void)
   Serial.printf("Tasks initialized (%d)\n",TASK_NBR_OF);
 }
 
+
 void setup() {
   // put your setup code here, to run once:
   int error;
@@ -125,8 +126,8 @@ void setup() {
   digitalWrite(PIN_PWR_1, LOW);
   #endif
   
-  pinMode(PIN_WD_RESET,OUTPUT);
-  digitalWrite(PIN_WD_RESET, LOW);
+  pinMode(PIN_EXT_PWR_OFF,OUTPUT);
+  digitalWrite(PIN_EXT_PWR_OFF, LOW);
 
   Wire.setSCL(PIN_I2C_SCL);
   Wire.setSDA(PIN_I2C_SDA);

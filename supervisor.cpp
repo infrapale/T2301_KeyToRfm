@@ -65,6 +65,7 @@ void supervisor_debug_print(void)
 
 void supervisor_task(void)
 {
+  static uint32_t delay_cntr = 0;
   uint8_t tindx;
   super_err_et err_cntr_at_limit = SUPER_ERR_NBR_OF;
   bool clr_edog = false;
@@ -74,9 +75,21 @@ void supervisor_task(void)
   switch(super.sm->state)
   {
     case 0:
+      digitalWrite(PIN_EXT_PWR_OFF,HIGH); // power off
+      delay_cntr = millis() + 2000;
+      super.sm->state++;
+      break;
+    case 1:
+      if (millis() > delay_cntr)
+      {
+        digitalWrite(PIN_EXT_PWR_OFF, LOW); // power on
+        super.sm->state = 10;
+      } 
+      break;  
+    case 10:
       super.ldr_val = analogRead(PIN_LDR);
       super.pir_val = digitalRead(PIN_PIR);
-      super.sm->state = 10;
+      super.sm->state = 20;
       for (uint8_t i = 0; i < SUPER_ERR_NBR_OF; i++) 
       {
         if (super.err_cntr[i] >= err_limit[i])
@@ -98,8 +111,8 @@ void supervisor_task(void)
          clr_edog = true;
       }
       break;
-    case 10:
-      super.sm->state = 0;
+    case 20:
+      super.sm->state = 10;
       tindx = task_check_all();
       if (tindx < TASK_NBR_OF) 
       {
@@ -113,22 +126,7 @@ void supervisor_task(void)
         clr_edog = true;
       }
       break;
-    case 3:
-      super.sm->state++;
-      break;
-    case 4:
-      super.sm->state++;
-      break;
-    case 5:
-      super.sm->state++;
-      break;
-    case 6:
-      super.sm->state++;
-      break;
-    case 7:
-      super.sm->state++;
-      break;
-    case 100:
+     case 100:
       super.sm->state++;
       Serial.printf("!!! Waiting for Watchdog Reset\n\r");
       break;
@@ -144,6 +142,6 @@ void supervisor_task(void)
   {
     if (super.wd_pin_state == 0) super.wd_pin_state = 1;
     else super.wd_pin_state = 0;
-    digitalWrite(PIN_WD_RESET,super.wd_pin_state);
+    //digitalWrite(PIN_EXT_PWR_OFF,super.wd_pin_state);
   }
 }

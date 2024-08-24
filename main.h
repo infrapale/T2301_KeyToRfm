@@ -5,7 +5,7 @@
 #define APP_NAME "T2401_KeyToRfm"
 #define RFM_SEND_INTERVAL 2000
 
-#define COMBO_2403
+//#define COMBO_2403
 
 #define PIN_SERIAL1_TX (0u)
 #define PIN_SERIAL1_RX (1u)
@@ -40,7 +40,7 @@
 #define PIN_I2C1_SCL    (11u)  
 #define PIN_I2C1_SDA    (10u)
 #endif
-#define PIN_WD_RESET    (13u)
+#define PIN_EXT_PWR_OFF (13u)
 
 
 
