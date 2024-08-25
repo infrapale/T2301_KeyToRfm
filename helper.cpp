@@ -25,7 +25,7 @@ void helper_save_main_eeprom(void)
     eep_write_u16(main_ctrl.state);
     eep_set_addr(EEP_ADDR_RESTART_CNTR);
     eep_write_u16(main_ctrl.restart_cntr);
-    eep_commit();
+    // eep_commit();
 }
 
 void helper_load_main_eeprom(void)
@@ -41,10 +41,10 @@ void helper_load_main_eeprom(void)
 void helper_initialize_data(void)
 {
   bool incorrect_data = false;
-  //edog_set_wd_timeout(4000);
-  delay(5);
-
   helper_load_main_eeprom();
+
+  main_ctrl.restart_cntr++;
+
   Serial.printf("State = %02X Restarts = %d\n\r",main_ctrl.state, main_ctrl.restart_cntr);
   if (main_ctrl.state > SIGNAL_STATE_SENDING) 
   {
@@ -62,6 +62,6 @@ void helper_initialize_data(void)
   {
     Serial.printf("Fixed data: State = %02X Restarts = %d\n\r",main_ctrl.state, main_ctrl.restart_cntr);
   }
-  delay(10);
   helper_save_main_eeprom();
+  eep_request_commit(10);
 }

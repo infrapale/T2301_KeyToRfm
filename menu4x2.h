@@ -26,6 +26,7 @@ typedef enum
   MENU_CAT_TITLE,
   MENU_CAT_STATE,
   MENU_CAT_DATE_TIME,
+  MENU_CAT_RESTARTS,
 } menu_category_et;
 
 typedef void (*menu_cb)(void);

@@ -75,6 +75,7 @@ task_st signal_state_task_handle  = {"Signal state   ", 1000, 0, 0, 255, 0, 0, s
 task_st autom_task_handle         = {"Automation     ", 1000,0, 0, 255, 0, 0, autom_task};
 task_st supervisor_task_handle    = {"Supervisor     ", 1000,0, 0, 255, 0, 0, supervisor_task};
 task_st debug_print_handle        = {"Debug Print    ", 5000,0, 0, 255, 0, 0, debug_print_task};
+task_st eeprom_task_handle        = {"EEPROM Emulator", 1000,0, 0, 255, 0, 0, eep_time_machine};
 
 int show = -1;
 LiquidCrystal_PCF8574 lcd(0x27);  // set the LCD address to 0x27 for a 16 chars and 2 line display
@@ -94,6 +95,7 @@ void initialize_tasks(void)
   task_set_task(TASK_SIGNAL_STATE,&signal_state_task_handle);
   task_set_task(TASK_SUPERVISOR, &supervisor_task_handle);
   task_set_task(TASK_DEBUG, &debug_print_handle);
+  task_set_task(TASK_EEP, &eeprom_task_handle);
   Serial.printf("Tasks initialized (%d)\n",TASK_NBR_OF);
 }
 
@@ -111,6 +113,9 @@ void setup() {
   Serial.begin(9600);
   Serial1.begin(9600);
   Serial2.begin(9600);
+
+  helper_initialize_data();
+
 
   delay(3000);
   Serial.println(APP_NAME);

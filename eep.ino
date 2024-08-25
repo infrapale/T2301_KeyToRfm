@@ -1,10 +1,13 @@
 #include "main.h"
 #include <EEPROM.h>
+#include "task.h"
 
 typedef struct 
 {
+    task_st  *th;
     uint16_t  addr;
     uint16_t  size;
+    uint16_t  commit_in_sec;
 } eep_st;
 
 
@@ -12,9 +15,12 @@ eep_st eep;
 
 void eep_initialize(uint16_t size)
 {
+  eep.th = task_get_task(TASK_EEP);
+  eep.th->state = 0;
   EEPROM.begin(size);
   eep.addr = 0;
   eep.size = size;
+  eep.commit_in_sec = 0;
 }
 
 bool eep_set_addr(uint16_t addr)
@@ -39,9 +45,18 @@ bool eep_next(void)
   return is_ok;
 }
 
+
 bool eep_commit()
 {
   return EEPROM.commit();
+}
+
+void eep_request_commit(uint16_t commit_in_sec)
+{
+    if (eep.commit_in_sec == 0)
+    {
+      eep.commit_in_sec = commit_in_sec;
+    }
 }
 
 void eep_write_u8(uint8_t u8)
@@ -80,3 +95,28 @@ uint16_t eep_read_u16(void)
   return (u16);
 }
 
+void eep_time_machine(void)
+{
+  switch(eep.th->state)
+  {
+    case 0:
+      eep.th->state = 10;
+      break;
+    case 10:
+      if (eep.commit_in_sec > 0) eep.th->state = 20;
+      else eep.th->state = 10;
+      break;
+    case 20:
+      if (eep.commit_in_sec > 0)
+      {
+        eep.commit_in_sec--;
+      }
+      else
+      {
+        eep_commit();
+        Serial.println("EEP committed");
+        eep.th->state = 10;
+      }
+      break;
+  }
+}

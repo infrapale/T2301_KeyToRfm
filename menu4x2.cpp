@@ -176,7 +176,7 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
     { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
     { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
     { "Valitse   ", MENU_CAT_ACTIVE    , MENU_OPTION, dummy_menu},
-    { "          ", MENU_CAT_DATE_TIME , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_RESTARTS  , MENU_MAIN, dummy_menu},
     { "          ", MENU_CAT_SENSOR    , MENU_MAIN, dummy_menu},
     { "          ", MENU_CAT_STATE     , MENU_MAIN, dummy_menu},
     { "Takaisin  ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu}
@@ -256,6 +256,10 @@ void menu4x2_show(uint8_t mindx)
               main_ctrl.time.minute);
           lcd.print (line0);
           // Serial.println(line0);
+          break;
+        case MENU_CAT_RESTARTS:
+          sprintf(line0, "Restarts: %5d", main_ctrl.restart_cntr);
+          lcd.print (line0);
           break;  
       }
     }

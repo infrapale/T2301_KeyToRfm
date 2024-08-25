@@ -53,6 +53,7 @@ typedef enum {
   TASK_AUTOM,
   TASK_SUPERVISOR,
   TASK_DEBUG,
+  TASK_EEP,
   TASK_NBR_OF
 } tasks_et;
 
