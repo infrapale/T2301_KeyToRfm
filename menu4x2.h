@@ -8,12 +8,17 @@
 
 typedef enum
 {
-  MENU_MAIN = 0,
+  MENU_ROOT = 0,
   MENU_OPTION,
   MENU_SET_TIME,
   MENU_SET_DATE,
   MENU_HOME,
   MENU_INFO,
+  MENU_INFO_1,
+  MENU_INFO_2,
+  MENU_INFO_3,
+  MENU_CODE_1,
+  MENU_CODE_2,
   MENU_TEST,
   MENU_NBR_OF  
 } menu_index_et;

@@ -126,68 +126,77 @@ const menu_def_st menu4x2_def[MENU_TOTAL] =
     --------      --------
 *********************************************************************************************
   Log in at home  
-    (root)[4]->(main menu)[4]->()[4]->()[7]->()[10sec]->(root)
+    (root)[4]->(option)[4]->()[4]->()[7]->()[10sec]->(root)
   Log out away  
-    (root)[4]->(main menu)[4]->()[4]->()[3]->()[10sec]->(root)
+    (root)[4]->(option)[4]->()[4]->()[3]->()[10sec]->(root)
   Set Date
-    (root)[4]->(main menu)[5]->(date)[5]->()[10sec]->(root)   month + 1
-    (root)[4]->(main menu)[5]->(date)[6]->()[10sec]->(root)   month - 1
-    (root)[4]->(main menu)[5]->(date)[1]->()[10sec]->(root)   day + 1
-    (root)[4]->(main menu)[5]->(date)[5]->()[10sec]->(root)   day - 1
+    (root)[4]->(option)[5]->(date)[5]->()[10sec]->(root)   month + 1
+    (root)[4]->(option)[5]->(date)[6]->()[10sec]->(root)   month - 1
+    (root)[4]->(option)[5]->(date)[1]->()[10sec]->(root)   day + 1
+    (root)[4]->(option)[5]->(date)[5]->()[10sec]->(root)   day - 1
   Set Time
-    (root)[4]->(main menu)[1]->(date)[5]->()[10sec]->(root)   hour + 1
-    (root)[4]->(main menu)[1]->(date)[6]->()[10sec]->(root)   hour - 1
-    (root)[4]->(main menu)[1]->(date)[1]->()[10sec]->(root)   minute + 1
-    (root)[4]->(main menu)[1]->(date)[5]->()[10sec]->(root)   minute - 1
+    (root)[4]->(option)[1]->(date)[5]->()[10sec]->(root)   hour + 1
+    (root)[4]->(option)[1]->(date)[6]->()[10sec]->(root)   hour - 1
+    (root)[4]->(option)[1]->(date)[1]->()[10sec]->(root)   minute + 1
+    (root)[4]->(option)[1]->(date)[5]->()[10sec]->(root)   minute - 1
   Info
-    (root)[4]->(main menu)[6]->(date)[5]->[30sec]->(root)     show info 1
-    (root)[4]->(main menu)[5]->(date)[6]->()[10sec]->(root)   show info 2
-    (root)[4]->(main menu)[5]->(date)[1]->()[10sec]->(root)   show info 3
+    (root)[4]->(option)[6]->(date)[5]->[30sec]->(root)     show info 1
+    (root)[4]->(option)[5]->(date)[6]->()[10sec]->(root)   show info 2
+    (root)[4]->(option)[5]->(date)[1]->()[10sec]->(root)   show info 3
+
+    Info 1:
+      Restarts  nn
+      LDR nn PIR n
+      Status text
+    Info 2:
+      TBD
+    Info 3:
+
   
 
 ********************************************************************************************/
 
 menu4x2_t menu4x2[MENU_NBR_OF] =
 {
-  [MENU_MAIN] =
+  [MENU_ROOT] =
   {
-    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
-    { "Valitse   ", MENU_CAT_ACTIVE    , MENU_OPTION, dummy_menu},
-    { "          ", MENU_CAT_TITLE     , MENU_MAIN, dummy_menu},
-    { "          ", MENU_CAT_DATE_TIME , MENU_MAIN, dummy_menu},
-    { "          ", MENU_CAT_STATE     , MENU_MAIN, dummy_menu},
-    { "Test      ", MENU_CAT_ACTIVE    , MENU_TEST, dummy_menu}
+    { "          ", MENU_CAT_EMPTY     , MENU_OPTION, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_TITLE     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_DATE_TIME , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_STATE     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu}
   },
   [MENU_OPTION] =
   {
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
     { "Aika =    ", MENU_CAT_ACTIVE    , MENU_SET_TIME, dummy_menu},
-    { "Kotona??  ", MENU_CAT_ACTIVE    , MENU_HOME, dummy_menu},
-    { "All Off   ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
-    { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "All Off   ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
+    { "Test      ", MENU_CAT_ACTIVE    , MENU_TEST, dummy_menu},
+    { "          ", MENU_CAT_ACTIVE    , MENU_CODE_1, dummy_menu},
     { "Paivam =  ", MENU_CAT_ACTIVE    , MENU_SET_DATE, dummy_menu},
     { "Info      ", MENU_CAT_ACTIVE    , MENU_INFO, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
-    { "Kuittaa   ", MENU_CAT_EMPTY     , MENU_MAIN, send_signal_event_confirm}
+    { "Kuittaa   ", MENU_CAT_EMPTY     , MENU_ROOT, send_signal_event_confirm},
   },
   [MENU_SET_TIME] =
   {
-    { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
     { "Min + 10  ", MENU_CAT_ACTIVE    , MENU_SET_TIME, minute_plus_10},
     { "Min + 1   ", MENU_CAT_ACTIVE    , MENU_SET_TIME, minute_plus_1},
-    { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
     { "          ", MENU_CAT_DATE_TIME , MENU_SET_TIME, dummy_menu},
     { "Tunti+1   ", MENU_CAT_ACTIVE    , MENU_SET_TIME, hour_plus},
     { "Tunti-1   ", MENU_CAT_ACTIVE    , MENU_SET_TIME, hour_minus},
-    { "Hyvaksy   ", MENU_CAT_ACTIVE    , MENU_MAIN, autom_set_time},
+    { "Hyvaksy   ", MENU_CAT_ACTIVE    , MENU_ROOT, autom_set_time},
   },
   [MENU_SET_DATE] =
   {
-    { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
     { "Paiva + 1 ", MENU_CAT_ACTIVE    , MENU_SET_DATE, day_plus_1},
     { "Paiva - 1 ", MENU_CAT_ACTIVE    , MENU_SET_DATE, day_minus_1},
-    { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
+    { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
     { "          ", MENU_CAT_DATE_TIME , MENU_SET_DATE, dummy_menu},
     { "KK + 1    ", MENU_CAT_ACTIVE    , MENU_SET_DATE, month_plus_1},
     { "KK - 1    ", MENU_CAT_ACTIVE    , MENU_SET_DATE, month_minus_1},
@@ -195,36 +204,92 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
   },
   [MENU_HOME] =
   {
-    { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
-    { "Kotona    ", MENU_CAT_ACTIVE    , MENU_MAIN, send_signal_event_login},
-    { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
-    { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
-    { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
-    { "Poissa    ", MENU_CAT_ACTIVE    , MENU_MAIN, send_signal_event_leave},
-    { "Sammuta   ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
-    { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu}
+    { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
+    { "Kotona    ", MENU_CAT_ACTIVE    , MENU_ROOT, send_signal_event_login},
+    { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
+    { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
+    { "Poissa    ", MENU_CAT_ACTIVE    , MENU_ROOT, send_signal_event_leave},
+    { "Sammuta   ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu}
   },
   [MENU_INFO] =
   {
-    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_MAIN, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
     { "Valitse   ", MENU_CAT_ACTIVE    , MENU_OPTION, dummy_menu},
-    { "          ", MENU_CAT_RESTARTS  , MENU_MAIN, dummy_menu},
-    { "          ", MENU_CAT_SENSOR    , MENU_MAIN, dummy_menu},
-    { "          ", MENU_CAT_STATE     , MENU_MAIN, dummy_menu},
-    { "Takaisin  ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu}
+    { "          ", MENU_CAT_RESTARTS  , MENU_ROOT, dummy_menu},
+    { "Info 1    ", MENU_CAT_ACTIVE    , MENU_INFO_1, dummy_menu},
+    { "Info 2    ", MENU_CAT_EMPTY     , MENU_INFO_2, dummy_menu},
+    { "Info 3    ", MENU_CAT_EMPTY     , MENU_INFO_3, dummy_menu}
   },
+  [MENU_INFO_1] =
+  {
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_ACTIVE    , MENU_OPTION, dummy_menu},
+    { "          ", MENU_CAT_RESTARTS  , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_SENSOR    , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu}
+  },
+  [MENU_INFO_2] =
+  {
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_ACTIVE    , MENU_OPTION, dummy_menu},
+    { "          ", MENU_CAT_RESTARTS  , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_SENSOR    , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu}
+  },
+  [MENU_INFO_3] =
+  {
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_ACTIVE    , MENU_OPTION, dummy_menu},
+    { "          ", MENU_CAT_RESTARTS  , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_SENSOR    , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu}
+  },
+  [MENU_CODE_1] =
+  {
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_ACTIVE    , MENU_CODE_2, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu}
+  },
+[MENU_CODE_2] =
+  {
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, send_signal_event_leave},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, send_signal_event_login}
+  },
+
   [MENU_TEST] =
   {
-    { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
-    { "Kotona    ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
-    { "          ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
-    { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_MAIN, dummy_menu},
-    { "Login     ", MENU_CAT_ACTIVE    , MENU_MAIN, send_signal_event_login},
-    { "Leave     ", MENU_CAT_ACTIVE    , MENU_MAIN, send_signal_event_leave},
-    { "Alert     ", MENU_CAT_ACTIVE    , MENU_MAIN, send_signal_event_alert},
-    { "Confirm   ", MENU_CAT_ACTIVE    , MENU_MAIN, send_signal_event_confirm}
+    { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
+    { "Kotona    ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
+    { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
+    { "Login     ", MENU_CAT_ACTIVE    , MENU_ROOT, send_signal_event_login},
+    { "Leave     ", MENU_CAT_ACTIVE    , MENU_ROOT, send_signal_event_leave},
+    { "Alert     ", MENU_CAT_ACTIVE    , MENU_ROOT, send_signal_event_alert},
+    { "Confirm   ", MENU_CAT_ACTIVE    , MENU_ROOT, send_signal_event_confirm}
   },
 };
 
@@ -238,10 +303,10 @@ void menu4x2_reset_timeout(void)
 
 void menu4x2_initialize(void)
 {
-  menu4x2_ctrl.level = MENU_MAIN;
+  menu4x2_ctrl.level = MENU_ROOT;
   menu4x2_reset_timeout();
   lcd.setBacklight(1);
-  menu4x2_show(MENU_MAIN);
+  menu4x2_show(MENU_ROOT);
 
 }
 
@@ -343,7 +408,7 @@ void menu4x2_timeout_task(void)
 
     if (menu4x2_ctrl.menu_timeout_at < millis())
     {
-      menu4x2_ctrl.level = MENU_MAIN;
+      menu4x2_ctrl.level = MENU_ROOT;
       menu4x2_show(menu4x2_ctrl.level);
       menu4x2_ctrl.menu_timeout_at = millis() + TIMEOUT_MENU;
     } 
