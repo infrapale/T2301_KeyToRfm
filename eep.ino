@@ -13,14 +13,18 @@ typedef struct
 
 eep_st eep;
 
-void eep_initialize(uint16_t size)
+void eep_initialize(uint16_t e_size)
 {
   eep.th = task_get_task(TASK_EEP);
   eep.th->state = 0;
-  EEPROM.begin(size);
+  EEPROM.begin(e_size);
   eep.addr = 0;
-  eep.size = size;
+  eep.size = e_size;
   eep.commit_in_sec = 0;
+  Serial.print("eep_initialize: state = ");
+  Serial.print(eep.th->state);
+  Serial.println();
+  
 }
 
 bool eep_set_addr(uint16_t addr)
@@ -97,6 +101,11 @@ uint16_t eep_read_u16(void)
 
 void eep_time_machine(void)
 {
+
+  // Serial.print("EEP="); Serial.print(eep.th->state);  
+  // Serial.print(" commit in=");  Serial.print(eep.commit_in_sec);
+  // Serial.println();
+
   switch(eep.th->state)
   {
     case 0:

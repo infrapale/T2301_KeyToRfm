@@ -6,6 +6,8 @@
 #include "signal.h"
 #include "autom.h"
 #include "task.h"
+#include "eep.h"
+#include "helper.h"
 
 #define RGB_PIX_PIN     22
 
@@ -26,6 +28,8 @@ typedef struct
   uint16_t cntr;
 } signal_st;
 
+
+extern main_ctrl_st main_ctrl;
 
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = Arduino pin number (most are valid)
@@ -80,6 +84,22 @@ char state_label[SIGNAL_INDEX_NBR_OF][10] =
 
 signal_st signal;
 
+void signal_set_event(uint16_t state);
+void signal_set_relay_prog(uint16_t state);
+
+void  helper_save_signal_state(uint16_t commit_in_sec)
+{
+    main_ctrl.state = signal.sm->state;
+    helper_save_main_eeprom();
+    eep_request_commit(commit_in_sec);
+}
+
+void  helper_load_signal_state(void)
+{
+    helper_load_main_eeprom();
+    signal.sm->state = main_ctrl.state;
+}
+
 void signal_initialize(void)
 {
     uint32_t color_u32;
@@ -87,7 +107,12 @@ void signal_initialize(void)
     signal.one_pix_state = 0;
     signal.event = SIGNAL_EVENT_UNDEFINED;
     signal.sm = task_get_task(TASK_SIGNAL_STATE);
+
     signal.sm->state = 0;
+    helper_load_signal_state();
+    signal_set_relay_prog(signal.sm->state);    
+    signal_set_event(signal.sm->state);
+
     signal.seq_indx = 0;
     signal.seq_cntr = 0;
     signal.cntr = 0;
@@ -154,6 +179,63 @@ void signal_update(void)
 
 }
 
+void signal_set_event(uint16_t state)
+{
+    switch(state)
+    {
+        case SIGNAL_STATE_START:
+            signal_set_event(SIGNAL_EVENT_UNDEFINED);
+            break;
+        case SIGNAL_STATE_AT_HOME:
+            signal_set_event(SIGNAL_EVENT_LOGIN);
+            break;
+        case   SIGNAL_STATE_COUNTDOWN:
+            signal_set_event(SIGNAL_EVENT_LEAVE);
+            break;
+        case   SIGNAL_STATE_AWAY:
+            signal_set_event(SIGNAL_EVENT_LEAVE);
+            break;
+        case   SIGNAL_STATE_WARNING:
+            signal_set_event(SIGNAL_EVENT_ALERT);
+            break;
+        case   SIGNAL_STATE_ALARM:
+            break;
+        case   SIGNAL_STATE_SENDING:
+            break;
+    }
+}
+
+
+void signal_set_relay_prog(uint16_t state)
+{
+    switch(state)
+    {
+        case SIGNAL_STATE_START:
+            autom_set_program(RELAY_PROG_UNDEF);
+            break;
+        case SIGNAL_STATE_AT_HOME:
+            autom_set_program(RELAY_PROG_AT_HOME);
+            break;
+        case   SIGNAL_STATE_COUNTDOWN:
+            break;
+        case   SIGNAL_STATE_AWAY:
+            autom_set_program(RELAY_PROG_AWAY);
+            break;
+        case   SIGNAL_STATE_WARNING:
+            autom_set_program(RELAY_PROG_WARNING);
+            break;
+        case   SIGNAL_STATE_ALARM:
+            autom_set_program(RELAY_PROG_ALARM);
+            break;
+        case   SIGNAL_STATE_SENDING:
+            break;
+    }
+}
+
+
+
+
+
 
 void signal_state_machine(void)
 {
@@ -178,13 +260,13 @@ void signal_state_machine(void)
     {
       case SIGNAL_STATE_START:  // Starting ...
         signal.sm_millis = millis() + 1000;
-        autom_set_program(RELAY_PROG_UNDEF);
+        signal_set_relay_prog(signal.sm->state);
         signal.sm->state = SIGNAL_STATE_START + 1;
         break;
 
       case SIGNAL_STATE_START + 1:  // Start state
         // TODO read from edog
-        autom_set_program(RELAY_PROG_UNDEF);
+        signal_set_relay_prog(signal.sm->state);
         signal.sm->state = SIGNAL_STATE_AT_HOME;
         break;
 
@@ -203,6 +285,7 @@ void signal_state_machine(void)
           case SIGNAL_EVENT_ALERT:
             signal.relay_prog = RELAY_PROG_WARNING ;
             signal.sm->state = SIGNAL_STATE_WARNING;
+            signal_set_relay_prog(signal.sm->state);
             break;
         }        
         break;
@@ -212,6 +295,8 @@ void signal_state_machine(void)
         if (signal.event == SIGNAL_EVENT_TIMEOUT) 
         {
           signal.sm->state = SIGNAL_STATE_AWAY;
+          helper_save_signal_state(5);
+          signal_set_relay_prog(signal.sm->state);
         }         
         break;
       case SIGNAL_STATE_AWAY:
@@ -220,18 +305,23 @@ void signal_state_machine(void)
           case SIGNAL_EVENT_LOGIN:
             signal.sm_millis = millis() + 30000;
             signal.sm->state = SIGNAL_STATE_AT_HOME;
+            helper_save_signal_state(5);
+            signal_set_relay_prog(signal.sm->state);
             break;          
           case SIGNAL_EVENT_ALERT:
             signal.sm->state = SIGNAL_STATE_ALARM;
-            signal.relay_prog = RELAY_PROG_ALARM;
+            helper_save_signal_state(1);
+            signal_set_relay_prog(signal.sm->state);
+            autom_set_program(RELAY_PROG_ALARM);
             break;
         }
       case SIGNAL_STATE_ALARM:
         switch(signal.event)
         {
           case SIGNAL_EVENT_CONFIRM:
-            signal.sm->state = SIGNAL_STATE_AWAY;
-            signal.relay_prog = RELAY_PROG_AWAY;
+            helper_load_main_eeprom();
+            signal.sm->state = main_ctrl.state;
+            signal_set_relay_prog(signal.sm->state);
             break;          
         }
         break;
@@ -240,8 +330,9 @@ void signal_state_machine(void)
         {
           case SIGNAL_EVENT_CONFIRM:
           case SIGNAL_EVENT_TIMEOUT:
-            signal.sm->state = SIGNAL_STATE_AWAY;
-            signal.relay_prog = RELAY_PROG_AWAY;
+            helper_load_main_eeprom();
+            signal.sm->state = main_ctrl.state;
+            signal_set_relay_prog(signal.sm->state);
             break;          
         }
         break;
@@ -255,6 +346,7 @@ void signal_state_machine(void)
       default:
         Serial.printf("!! Incorrect Signal State !!: %02X", signal.sm->state);
         signal.sm->state = SIGNAL_STATE_START;
+        signal_set_relay_prog(signal.sm->state);
         break; 
     }
     signal.event = SIGNAL_EVENT_UNDEFINED;

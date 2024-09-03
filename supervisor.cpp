@@ -63,6 +63,11 @@ void supervisor_debug_print(void)
   Serial.println();
 }
 
+bool supervisor_pwr_is_on(void)
+{
+  return super.sm->state >= 1;
+}
+
 void supervisor_task(void)
 {
   static uint32_t delay_cntr = 0;

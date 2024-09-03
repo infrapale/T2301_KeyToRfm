@@ -38,6 +38,7 @@ void helper_load_main_eeprom(void)
 }
 
 
+
 void helper_initialize_data(void)
 {
   bool incorrect_data = false;

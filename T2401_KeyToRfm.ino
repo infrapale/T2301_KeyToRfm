@@ -141,8 +141,8 @@ void setup() {
   
   Wire.begin();
   //Wire1.begin();
-  eep_initialize(EEP_SIZE);
   initialize_tasks();
+  eep_initialize(EEP_SIZE);
   signal_initialize();
 
   delay(1000);

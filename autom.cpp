@@ -285,11 +285,19 @@ void autom_task()
     switch(autom_cntrl.th->state)
     {
         case 0:  // Initial state
-            autom_cntrl.th->state = 1;
+            if (supervisor_pwr_is_on()) 
+            {
+              autom_cntrl.th->state = 1;
+              autom_cntrl.next_get_time = autom_cntrl.iter_cntr + 10;
+            }
             break;
-        case 1:  // Set  Mode
+        case 1:
+            if (autom_cntrl.iter_cntr > autom_cntrl.next_get_time) autom_cntrl.th->state = 2;
+            break;
+        case 2:  // Set  Mode
             if (autom_cntrl.prev_state_index != signal_get_state_index())
             {
+                Serial.print("autom_task - state index: "); Serial.println(signal_get_state_index());
                 if (sema_reserve( SEMA_SERIAL2))
                 {
                     autom_cntrl.prev_state_index = signal_get_state_index();
@@ -297,13 +305,17 @@ void autom_task()
                     autom_cntrl.th->state++;
                     sema_release( SEMA_SERIAL2);
                 }
+                else
+                {
+                  Serial.print("autom_task - state index: ");
+                }
             }
             else
             {
               autom_cntrl.th->state++;
             }
             break;
-        case 2:  // Set Time
+        case 3:  // Set Time
             autom_cntrl.th->state = 10;
             if (autom_cntrl.set_time)
             {
@@ -379,6 +391,8 @@ void autom_task()
             Serial.printf("Auto Relay Control: Month: %d Hour: %d\n", main_ctrl.time.month, main_ctrl.time.hour);
             do
             {
+
+              
               changed = autom_on_off(autom_cntrl.relay_indx);
               if (changed) 
               {
@@ -391,7 +405,7 @@ void autom_task()
             }
             while ( !changed && (autom_cntrl.relay_indx < VA_RELAY_NBR_OF));
 
-            if ( autom_cntrl.relay_indx >= VA_RELAY_NBR_OF) autom_cntrl.th->state = 1;
+            if ( autom_cntrl.relay_indx >= VA_RELAY_NBR_OF) autom_cntrl.th->state = 2;
             break;
         case 52:
              autom_cntrl.th->state--;
@@ -402,7 +416,7 @@ void autom_task()
         case 200:
             Serial.print("#");
             supervisor_inc_cntr(SUPER_ERR_GET_TIME);
-            autom_cntrl.th->state = 1;  // TODO
+            autom_cntrl.th->state = 2;  // TODO
             break;
     }
 

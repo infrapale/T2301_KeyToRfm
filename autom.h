@@ -1,3 +1,5 @@
+#ifndef __AUTOM_H__
+#define __AUTOM_H__
 
 typedef enum
 {
@@ -44,3 +46,4 @@ uint8_t autom_get_minute(void);
 
 void autom_set_time(void);
 
+#endif

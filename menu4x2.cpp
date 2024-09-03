@@ -113,6 +113,40 @@ const menu_def_st menu4x2_def[MENU_TOTAL] =
   {3 ,0},
 };
 
+/********************************************************************************************
+    Menu definition indeces     Fixed Labels
+    --------      --------
+    |  4   |      |  0   |      Menu    Cancel
+    --------      --------
+    |  5   |      |  1   |      
+    --------      --------
+    |  6   |      |  2   |
+    --------      --------
+    |  7   |      |  3   |
+    --------      --------
+*********************************************************************************************
+  Log in at home  
+    (root)[4]->(main menu)[4]->()[4]->()[7]->()[10sec]->(root)
+  Log out away  
+    (root)[4]->(main menu)[4]->()[4]->()[3]->()[10sec]->(root)
+  Set Date
+    (root)[4]->(main menu)[5]->(date)[5]->()[10sec]->(root)   month + 1
+    (root)[4]->(main menu)[5]->(date)[6]->()[10sec]->(root)   month - 1
+    (root)[4]->(main menu)[5]->(date)[1]->()[10sec]->(root)   day + 1
+    (root)[4]->(main menu)[5]->(date)[5]->()[10sec]->(root)   day - 1
+  Set Time
+    (root)[4]->(main menu)[1]->(date)[5]->()[10sec]->(root)   hour + 1
+    (root)[4]->(main menu)[1]->(date)[6]->()[10sec]->(root)   hour - 1
+    (root)[4]->(main menu)[1]->(date)[1]->()[10sec]->(root)   minute + 1
+    (root)[4]->(main menu)[1]->(date)[5]->()[10sec]->(root)   minute - 1
+  Info
+    (root)[4]->(main menu)[6]->(date)[5]->[30sec]->(root)     show info 1
+    (root)[4]->(main menu)[5]->(date)[6]->()[10sec]->(root)   show info 2
+    (root)[4]->(main menu)[5]->(date)[1]->()[10sec]->(root)   show info 3
+  
+
+********************************************************************************************/
+
 menu4x2_t menu4x2[MENU_NBR_OF] =
 {
   [MENU_MAIN] =
